@@ -311,21 +311,91 @@ def installa_dipendenze(cartella, log=None):
     return False, messaggio, riassunto
 
 
+def _comando_avvio(info):
+    avvio = (info.get("avvio") or "").strip()
+    if avvio:
+        return avvio
+    py = [f for f in info.get("files", []) if f.endswith(".py")]
+    return f"python {py[0]}" if py else ""
+
+
 def avvia_progetto(info):
-    """Avvia il programma generato (da chiamare SOLO dopo conferma dell'utente)."""
+    """Avvia il programma generato in modo persistente (da chiamare dopo conferma)."""
     import subprocess
     cartella = info.get("cartella")
-    avvio = (info.get("avvio") or "").strip()
+    avvio = _comando_avvio(info)
     if not cartella or not os.path.isdir(cartella):
         return False, "Cartella del progetto non trovata."
     if not avvio:
-        # prova a indovinare: primo .py
-        py = [f for f in info.get("files", []) if f.endswith(".py")]
-        if not py:
-            return False, "Non so come avviarlo (nessun comando di avvio)."
-        avvio = f"python {py[0]}"
+        return False, "Non so come avviarlo (nessun comando di avvio)."
     try:
         subprocess.Popen(avvio, shell=True, cwd=cartella)
         return True, f"▶️ Avviato: {avvio}\n(nella cartella {cartella})"
     except Exception as e:
         return False, f"Avvio non riuscito: {e}"
+
+
+def esegui_con_diagnostica(info, timeout=18):
+    """Esegue il programma catturando l'output. Restituisce (stato, testo):
+      - "ok"      : terminato senza errori (testo = output)
+      - "running" : non è terminato entro il timeout (probabile bot/server che gira)
+      - "errore"  : è andato in errore (testo = traceback/stderr)
+    """
+    import subprocess
+    cartella = info.get("cartella")
+    avvio = _comando_avvio(info)
+    if not cartella or not avvio:
+        return "errore", "Impossibile avviare il progetto."
+    try:
+        c = subprocess.run(avvio, shell=True, cwd=cartella, capture_output=True,
+                           text=True, timeout=timeout, encoding="utf-8", errors="replace")
+    except subprocess.TimeoutExpired:
+        return "running", ""
+    except Exception as e:
+        return "errore", str(e)
+    if c.returncode == 0:
+        return "ok", (c.stdout or "").strip()
+    return "errore", ((c.stderr or "") + "\n" + (c.stdout or "")).strip()
+
+
+SISTEMA_CORREGGI = (
+    "Sei un ingegnere Python SENIOR. Ti do un progetto e l'ERRORE (traceback) che "
+    "produce quando viene eseguito. Trova e CORREGGI il bug. Restituisci TUTTI i file "
+    "corretti e COMPLETI (non solo le differenze) nel formato ESATTO, senza testo fuori:\n"
+    "=== FILE: nomefile ===\n<contenuto corretto>\n"
+    "=== AVVIO: comando ===\n=== NOTE: cosa hai corretto ===\n"
+)
+
+
+def correggi_errore(info, traceback_testo, cfg, log=None):
+    """Corregge il codice del progetto in base al traceback. (ok, messaggio, info)."""
+    log = log or (lambda s: None)
+    provider = agent_llm.provider_predefinito(cfg)
+    if not provider:
+        return False, "Serve un cervello attivo per correggere.", info
+    cartella = info.get("cartella")
+    if not cartella or not os.path.isdir(cartella):
+        return False, "Progetto non trovato.", info
+    correnti = _leggi_progetto(cartella)
+    blocco = "\n\n".join(f"=== FILE: {rel} ===\n{c}" for rel, c in correnti)
+    log("Leggo l'errore e correggo il codice…")
+    try:
+        risposta = agent_llm.chiedi(
+            cfg, provider, SISTEMA_CORREGGI,
+            f"PROGETTO:\n{blocco}\n\nERRORE PRODOTTO:\n{traceback_testo[-1500:]}",
+            max_token=3800)
+    except Exception as e:
+        return False, f"Correzione non riuscita: {e}", info
+    files, avvio, note = _parse(risposta)
+    if not files:
+        return False, "Non sono riuscito a correggere il codice.", info
+    for rel, contenuto in files:
+        dest = os.path.join(cartella, rel.replace("/", os.sep))
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        with open(dest, "w", encoding="utf-8") as f:
+            f.write(contenuto)
+    nuovo = dict(info)
+    nuovo["files"] = [r for r, _ in files]
+    if avvio:
+        nuovo["avvio"] = avvio
+    return True, ("🔧 Corretto: " + (note or "sistemato l'errore")), nuovo

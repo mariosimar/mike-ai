@@ -1,4 +1,4 @@
 {
-  "versione": "0.15.0",
-  "note": "Riparazione pip intelligente: legge l'errore e prova una soluzione alternativa (versione compatibile o pacchetto equivalente), in sicurezza"
+  "versione": "0.16.0",
+  "note": "Auto-debug: se un programma creato va in errore, Mike legge il traceback, corregge il codice e riprova (max 2 tentativi)"
 }

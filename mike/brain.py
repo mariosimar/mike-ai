@@ -974,12 +974,12 @@ class Mike:
             }
             return (f"\n\n📦 Questo progetto usa librerie extra: {', '.join(libs)}.\n"
                     "▶️ Vuoi che le installi io (e poi avvii)? Scrivi /conferma  (o /annulla).")
-        if info.get("avvio"):
+        if info.get("avvio") or any(f.endswith(".py") for f in info.get("files", [])):
             self.azione_in_sospeso = {
-                "descrizione": f"Avviare il programma ({info['avvio']})",
-                "esegui": lambda: builder.avvia_progetto(info),
+                "descrizione": f"Avviare il programma ({info.get('avvio','')})",
+                "esegui": lambda: self._esegui_con_autofix(info),
             }
-            return "\n\n▶️ Vuoi che lo avvii ora? Scrivi /conferma  (o /annulla)."
+            return "\n\n▶️ Vuoi che lo avvii ora? (se dà errore, lo correggo da solo) /conferma  (o /annulla)."
         return ""
 
     def _installa_e_poi_avvia(self, info):
@@ -1001,14 +1001,42 @@ class Mike:
         return True, msg
 
     def _prepara_avvio(self, info, msg):
-        """Se il progetto è avviabile, imposta l'azione di avvio (sotto conferma)."""
-        if info.get("avvio"):
+        """Se il progetto è avviabile, imposta l'azione di avvio con auto-correzione."""
+        if info.get("avvio") or any(f.endswith(".py") for f in info.get("files", [])):
             self.azione_in_sospeso = {
-                "descrizione": f"Avviare il programma ({info['avvio']})",
-                "esegui": lambda: builder.avvia_progetto(info),
+                "descrizione": f"Avviare il programma ({info.get('avvio','')})",
+                "esegui": lambda: self._esegui_con_autofix(info),
             }
-            msg += "\n\n▶️ Ora posso avviarlo: scrivi /conferma  (o /annulla)."
+            msg += "\n\n▶️ Ora posso avviarlo (e se dà errore lo correggo da solo): /conferma  (o /annulla)."
         return msg
+
+    def _esegui_con_autofix(self, info, tentativi=2):
+        """Esegue il programma; se va in errore, legge il traceback, corregge e riprova."""
+        for i in range(tentativi + 1):
+            self._log("Eseguo il programma…")
+            stato, out = builder.esegui_con_diagnostica(info)
+            if stato == "ok":
+                testo = "✅ Eseguito senza errori."
+                if out:
+                    testo += f"\n\nOutput:\n{out[:1500]}"
+                self.ultimo_progetto = info
+                return True, testo
+            if stato == "running":
+                builder.avvia_progetto(info)  # sembra un programma che gira: lo lancio davvero
+                self.ultimo_progetto = info
+                return True, "✅ Il programma parte correttamente ed è ora in esecuzione."
+            # stato == "errore"
+            if i >= tentativi:
+                self.ultimo_progetto = info
+                return True, ("⚠️ Il programma dà un errore che non sono riuscito a correggere "
+                              f"da solo dopo {tentativi} tentativi. Ecco il dettaglio:\n"
+                              f"{out[-700:]}\n\nPuoi dirmi tu cosa fare, o /modifica <istruzione>.")
+            self._log(f"Errore rilevato: correggo il codice (tentativo {i+1}/{tentativi})…")
+            ok, _msg, info = builder.correggi_errore(info, out, self.cfg, log=self._log)
+            self.ultimo_progetto = info
+            if not ok:
+                return True, f"⚠️ Non sono riuscito a correggere l'errore:\n{out[-600:]}"
+        return True, "⚠️ Non sono riuscito a farlo funzionare."
 
     def _riparazione_intelligente_pip(self, errore):
         """Legge l'errore di pip, chiede al modello UNA soluzione alternativa e la prova.
