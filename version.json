@@ -1,4 +1,4 @@
 {
-  "versione": "0.19.3",
-  "note": "Avvio come amministratore (auto-elevazione UAC nei launcher) + indicatore ADMIN nell'interfaccia"
+  "versione": "0.19.4",
+  "note": "Velocita: modalita agente OFF di default (1 chiamata invece di 3-4), i comandi PC restano diretti e istantanei"
 }

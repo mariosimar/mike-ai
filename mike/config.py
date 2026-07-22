@@ -22,7 +22,7 @@ PREDEFINITI = {
     "abilita_memoria": True,
     "aggiornamento_sorgente": "",
     "aggiornamento_auto": True,
-    "modalita_agente": True,
+    "modalita_agente": False,   # False = veloce (1 chiamata); i comandi PC restano diretti
     "modalita_esperto": False,
 }
 

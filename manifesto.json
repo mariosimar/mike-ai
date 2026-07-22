@@ -1,6 +1,6 @@
 {
-  "versione": "0.19.3",
-  "note": "Avvio come amministratore (auto-elevazione UAC nei launcher) + indicatore ADMIN nell'interfaccia",
+  "versione": "0.19.4",
+  "note": "Velocita: modalita agente OFF di default (1 chiamata invece di 3-4), i comandi PC restano diretti e istantanei",
   "file": [
     "README.md",
     "avvia.py",
@@ -72,7 +72,7 @@
     "mike/brain.py": "8d1fabeab80a4edd20a386203a8941734f50fa79f09fdf9e9b1d5caea9f3ad8e",
     "mike/clienti/__init__.py": "012e55c020337646b801cc8406cc512c68d30d98bd0cef9acb69da180ba30f54",
     "mike/clienti/registro.py": "1c1f5f7d89074b9be8e58e187277dc3c7376edbb0e9465e6fcb2b420ab18a727",
-    "mike/config.py": "29c129ed421701457bf662663006a64d5a804aca264f1b801195aeb6536c4e1c",
+    "mike/config.py": "73495986481fc4cffdca3a25936d8d20c132348178551c7d1ba9b175c6fa7ed0",
     "mike/conoscenza/__init__.py": "6215a0291c2c836c3c1ad5e6968c3b1309620a7969b2f6f6662b1f69b2353a50",
     "mike/conoscenza/base.py": "22d1c99c7a8abcc0c0893e6f0140f5a1fa184f6f7dee6891fbcc43be5fff94b2",
     "mike/costruttore/__init__.py": "6d4ed4a9a479d7d33264941af5da33e89c0a1966c069d8ba7c1f2686c2b49b5c",
