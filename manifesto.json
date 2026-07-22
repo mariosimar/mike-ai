@@ -1,6 +1,6 @@
 {
-  "versione": "0.14.0",
-  "note": "Auto-riparazione pip, installazione librerie, generatore software, GitHub auto-update",
+  "versione": "0.15.0",
+  "note": "Riparazione pip intelligente: legge l'errore e prova una soluzione alternativa (versione compatibile o pacchetto equivalente), in sicurezza",
   "file": [
     "README.md",
     "avvia.py",
@@ -60,7 +60,7 @@
     "mike/agents/ragionatore.py": "4961743a7fd44276078d4baea17745f67a796a8d163783110f824b3e3d41a4b2",
     "mike/aggiornamento/__init__.py": "87b6bcd652c67eefe6553e32fe707b311568b18d41bba9d61df01e6b0c1e6419",
     "mike/aggiornamento/updater.py": "8fa3b6125a11ce780ef67ede6e2f6d6768f02eaef0adf000f8ecf98e2566db3d",
-    "mike/brain.py": "40edf438747945c98b42352a2822efd86e1b75fab308bab44ef59a03cc6b87ea",
+    "mike/brain.py": "1d2d5dac689c6f75f929cae4ce25cac3399ffcd7338f0fb94b7baececb99a0bb",
     "mike/config.py": "853b84dcbac0d02830b5608142cb90f333bb94f5631424d64a6ad4fdfc4b55f5",
     "mike/costruttore/__init__.py": "6d4ed4a9a479d7d33264941af5da33e89c0a1966c069d8ba7c1f2686c2b49b5c",
     "mike/costruttore/builder.py": "378812bdec3a603029180c7051b03f7df603862339ca7b0ef4a0d6f2f1a22358",

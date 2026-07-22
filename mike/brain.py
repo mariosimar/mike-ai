@@ -987,18 +987,89 @@ class Mike:
         self._log("Installo le librerie con pip…")
         ok, msg, errore = builder.installa_dipendenze(info.get("cartella", ""), log=self._log)
         if ok:
-            if info.get("avvio"):
-                self.azione_in_sospeso = {
-                    "descrizione": f"Avviare il programma ({info['avvio']})",
-                    "esegui": lambda: builder.avvia_progetto(info),
-                }
-                msg += "\n\n▶️ Ora posso avviarlo: scrivi /conferma  (o /annulla)."
-            return True, msg
-        # Fallita anche l'auto-riparazione: faccio spiegare l'errore in parole semplici
-        spiegazione = self._spiega_errore_pip(errore)
+            return True, self._prepara_avvio(info, msg)
+
+        # I rimedi fissi non sono bastati: Mike LEGGE l'errore e prova una soluzione alternativa.
+        ok2, msg2 = self._riparazione_intelligente_pip(errore)
+        if ok2:
+            return True, self._prepara_avvio(info, msg + "\n\n" + msg2)
+
+        # Non risolvibile in automatico: spiega all'utente cosa fare.
+        spiegazione = msg2 or self._spiega_errore_pip(errore)
         if spiegazione:
             msg += "\n\n🩺 " + spiegazione
         return True, msg
+
+    def _prepara_avvio(self, info, msg):
+        """Se il progetto è avviabile, imposta l'azione di avvio (sotto conferma)."""
+        if info.get("avvio"):
+            self.azione_in_sospeso = {
+                "descrizione": f"Avviare il programma ({info['avvio']})",
+                "esegui": lambda: builder.avvia_progetto(info),
+            }
+            msg += "\n\n▶️ Ora posso avviarlo: scrivi /conferma  (o /annulla)."
+        return msg
+
+    def _riparazione_intelligente_pip(self, errore):
+        """Legge l'errore di pip, chiede al modello UNA soluzione alternativa e la prova.
+
+        Sicurezza: esegue SOLO 'pip install <pacchetti>' con nomi validati (nessun
+        comando arbitrario, nessun flag di shell).
+        """
+        import re
+        if not errore:
+            return False, ""
+        valido = re.compile(r"^[A-Za-z0-9_.\-]+([=<>!~]=?[0-9A-Za-z.\-]+)?$")
+
+        # LIVELLO 1 (deterministico, affidabile): se pip elenca le versioni disponibili
+        # ("from versions: 1.2, 1.3, …"), riprova con la più recente.
+        m_ver = re.search(r"from versions:\s*([0-9][0-9.,\s]*)\)", errore)
+        m_pkg = re.search(r"requirement\s+([A-Za-z0-9_.\-]+)", errore)
+        if m_ver and m_pkg:
+            versioni = [v.strip() for v in m_ver.group(1).split(",") if v.strip()]
+            if versioni:
+                pkg = f"{m_pkg.group(1)}=={versioni[-1]}"
+                if valido.match(pkg):
+                    self._log(f"Provo con una versione disponibile: {pkg}…")
+                    ok, _o = builder._pip(["install", pkg])
+                    if ok:
+                        return True, f"✅ Risolto usando una versione compatibile: {pkg}"
+
+        # LIVELLO 2: chiedo al modello un'alternativa
+        provider = agent_llm.provider_predefinito(self.cfg)
+        if not provider:
+            return False, ""
+        system = (
+            "Sei un esperto di packaging Python. Ti do l'errore di un 'pip install' fallito. "
+            "Proponi UN tentativo alternativo per installare la libreria: una VERSIONE diversa, "
+            "una libreria EQUIVALENTE, o una wheel precompilata.\n"
+            "Rispondi SOLO in JSON:\n"
+            '{\"pacchetti\": [\"nome\" o \"nome==versione\"], \"motivo\": \"breve spiegazione\"}\n'
+            "Se il problema NON si risolve con pip (serve un compilatore, un pacchetto di sistema "
+            "o un'altra versione di Python), rispondi con pacchetti vuoti e spiega nel motivo cosa "
+            "deve fare l'utente. Solo nomi pip reali. Nessun testo fuori dal JSON, niente markdown."
+        )
+        try:
+            out = agent_llm.chiedi(self.cfg, provider, system, f"Errore:\n{errore}", max_token=500)
+        except Exception:
+            return False, ""
+        dati = agent_llm.estrai_json(out)
+        if not isinstance(dati, dict):
+            return False, ""
+        motivo = str(dati.get("motivo", "")).strip()
+        grezzi = dati.get("pacchetti") or []
+        # Validazione severa: solo nomi pacchetto/versione, niente metacaratteri o flag.
+        puliti = [p.strip() for p in grezzi if isinstance(p, str) and valido.match(p.strip())]
+        if not puliti:
+            return False, motivo
+        self._log(f"Provo una soluzione alternativa: {', '.join(puliti)}…")
+        ok, _out = builder._pip(["install"] + puliti)
+        if ok:
+            testo = "✅ Risolto con un'alternativa: " + ", ".join(puliti)
+            if motivo:
+                testo += f"\n({motivo})"
+            return True, testo
+        return False, motivo
 
     def _spiega_errore_pip(self, errore):
         """Chiede al modello di spiegare l'errore di pip e cosa fare (in italiano)."""

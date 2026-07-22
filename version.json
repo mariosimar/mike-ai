@@ -1,4 +1,4 @@
 {
-  "versione": "0.14.0",
-  "note": "Auto-riparazione pip, installazione librerie, generatore software, GitHub auto-update"
+  "versione": "0.15.0",
+  "note": "Riparazione pip intelligente: legge l'errore e prova una soluzione alternativa (versione compatibile o pacchetto equivalente), in sicurezza"
 }
