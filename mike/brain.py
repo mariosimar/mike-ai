@@ -1475,9 +1475,15 @@ class Mike:
 
     def diagnostica_provider(self):
         """Stato dei provider (per la GUI). Restituisce un dizionario."""
+        try:
+            import ctypes
+            admin = bool(ctypes.windll.shell32.IsUserAnAdmin())
+        except Exception:
+            admin = False
         return {
             "ollama": ollama.disponibile(),
             "claude": cfg_mod.chiave_valida(self.cfg.get("claude_api_key", "")),
             "gemini": cfg_mod.chiave_valida(self.cfg.get("gemini_api_key", "")),
             "modello": self.cfg.get("modello_ollama", ""),
+            "amministratore": admin,
         }

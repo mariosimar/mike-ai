@@ -1,6 +1,6 @@
 {
-  "versione": "0.19.2",
-  "note": "Rilevamento intenti molto piu robusto (problemi/lento/non va = diagnosi), Ollama come cervello principale (illimitato, no 429 Gemini), analisi resiliente (mostra dati reali anche se il modello e giu)",
+  "versione": "0.19.3",
+  "note": "Avvio come amministratore (auto-elevazione UAC nei launcher) + indicatore ADMIN nell'interfaccia",
   "file": [
     "README.md",
     "avvia.py",
@@ -69,7 +69,7 @@
     "mike/agents/ragionatore.py": "4961743a7fd44276078d4baea17745f67a796a8d163783110f824b3e3d41a4b2",
     "mike/aggiornamento/__init__.py": "87b6bcd652c67eefe6553e32fe707b311568b18d41bba9d61df01e6b0c1e6419",
     "mike/aggiornamento/updater.py": "8fa3b6125a11ce780ef67ede6e2f6d6768f02eaef0adf000f8ecf98e2566db3d",
-    "mike/brain.py": "ccca97743aefbe9177d8114b3e7538f47af2420a09af13cc63e2be73a96be89a",
+    "mike/brain.py": "8d1fabeab80a4edd20a386203a8941734f50fa79f09fdf9e9b1d5caea9f3ad8e",
     "mike/clienti/__init__.py": "012e55c020337646b801cc8406cc512c68d30d98bd0cef9acb69da180ba30f54",
     "mike/clienti/registro.py": "1c1f5f7d89074b9be8e58e187277dc3c7376edbb0e9465e6fcb2b420ab18a727",
     "mike/config.py": "29c129ed421701457bf662663006a64d5a804aca264f1b801195aeb6536c4e1c",

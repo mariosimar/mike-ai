@@ -1,4 +1,4 @@
 {
-  "versione": "0.19.2",
-  "note": "Rilevamento intenti molto piu robusto (problemi/lento/non va = diagnosi), Ollama come cervello principale (illimitato, no 429 Gemini), analisi resiliente (mostra dati reali anche se il modello e giu)"
+  "versione": "0.19.3",
+  "note": "Avvio come amministratore (auto-elevazione UAC nei launcher) + indicatore ADMIN nell'interfaccia"
 }

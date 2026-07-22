@@ -281,7 +281,7 @@ async function aggiornaStato(){
   try{const j=await (await fetch('/api/stato')).json();
     led('led-ollama',j.ollama);led('led-claude',j.claude);led('led-gemini',j.gemini);
     ring('g-ram','v-ram',j.ram||0);ring('g-disco','v-disco',j.disco||0);
-    $('#ver').textContent='v'+(j.versione||'')+(j.modello?(' · '+j.modello):'');
+    $('#ver').textContent='v'+(j.versione||'')+(j.modello?(' · '+j.modello):'')+(j.amministratore?' · 🛡️ ADMIN':'');
   }catch(e){}
   neural+=(( (window._target!==undefined)?_target:neural)-neural)*.2;
   ring('g-neural','v-neural',neural);
