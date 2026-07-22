@@ -129,6 +129,75 @@ SISTEMA_MODIFICA = (
 )
 
 
+TEMPLATE = {
+    "scraper": ("Estrae il titolo e i link da una pagina web", {
+        "requirements.txt": "requests\n",
+        "main.py": (
+            "import requests\n"
+            "import re\n\n"
+            "def estrai(url):\n"
+            "    html = requests.get(url, timeout=15).text\n"
+            "    titolo = re.search(r'<title>(.*?)</title>', html, re.S)\n"
+            "    print('Titolo:', titolo.group(1).strip() if titolo else '(nessuno)')\n"
+            "    link = re.findall(r'href=\"(https?://[^\"]+)\"', html)\n"
+            "    print(f'Trovati {len(link)} link:')\n"
+            "    for l in link[:20]:\n"
+            "        print(' -', l)\n\n"
+            "if __name__ == '__main__':\n"
+            "    estrai(input('URL da analizzare: ').strip())\n"),
+    }),
+    "watcher": ("Sorveglia una cartella e segnala i nuovi file", {
+        "main.py": (
+            "import os, time\n\n"
+            "CARTELLA = input('Cartella da sorvegliare: ').strip() or '.'\n"
+            "print('Sorveglio', CARTELLA, '(Ctrl+C per fermare)')\n"
+            "visti = set(os.listdir(CARTELLA))\n"
+            "while True:\n"
+            "    time.sleep(2)\n"
+            "    ora = set(os.listdir(CARTELLA))\n"
+            "    for nuovo in ora - visti:\n"
+            "        print('NUOVO FILE:', nuovo)\n"
+            "    visti = ora\n"),
+    }),
+    "promemoria": ("Mostra un promemoria a intervalli regolari", {
+        "main.py": (
+            "import time\n\n"
+            "testo = input('Cosa ti ricordo? ').strip()\n"
+            "minuti = int(input('Ogni quanti minuti? ') or '30')\n"
+            "print('Ok, te lo ricordo ogni', minuti, 'minuti.')\n"
+            "while True:\n"
+            "    time.sleep(minuti * 60)\n"
+            "    print('\\n>>> PROMEMORIA:', testo, '\\n')\n"),
+    }),
+}
+
+
+def elenca_template():
+    return {k: v[0] for k, v in TEMPLATE.items()}
+
+
+def crea_da_template(tipo):
+    """Crea un progetto da un template pronto. (ok, messaggio, info)."""
+    import time
+    t = TEMPLATE.get(tipo.lower().strip())
+    if not t:
+        disponibili = ", ".join(TEMPLATE.keys())
+        return False, f"Template «{tipo}» non trovato. Disponibili: {disponibili}", None
+    descrizione, files = t
+    nome = f"{tipo.lower()}_{time.strftime('%H%M%S')}"
+    cartella = os.path.join(CARTELLA_PROGETTI, nome)
+    os.makedirs(cartella, exist_ok=True)
+    creati = []
+    for rel, contenuto in files.items():
+        with open(os.path.join(cartella, rel), "w", encoding="utf-8") as f:
+            f.write(contenuto)
+        creati.append(rel)
+    info = {"cartella": cartella, "avvio": "python main.py", "files": creati,
+            "nome": nome, "descrizione": descrizione}
+    msg = f"✅ Creato da template «{tipo}»: {descrizione}\n📄 File: {', '.join(creati)}\n📁 {cartella}"
+    return True, msg, info
+
+
 def elenca_progetti():
     """Elenco delle cartelle di progetto create."""
     if not os.path.isdir(CARTELLA_PROGETTI):

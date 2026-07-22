@@ -10,8 +10,10 @@ from .agents.orchestratore import Orchestratore
 from .agents.agente import Agente
 from .agents import llm as agent_llm
 from .agents.ragionatore import Ragionatore
-from .tools import mappe
+from .tools import mappe, schermo
 from .costruttore import builder
+from .pianificatore import scheduler
+from .conoscenza import base as conoscenza
 from .diagnostica import scanner, logs, live
 from .recupero import recupero
 from .riparazione import azioni
@@ -68,13 +70,21 @@ class Mike:
 
     # ---------- prompt di sistema ----------
 
-    def _prompt_sistema(self, contesto_web="", contesto_sistema=""):
+    def _prompt_sistema(self, contesto_web="", contesto_sistema="", query=""):
         nome = self.cfg["nome_assistente"]
         parti = [
             f"Tu sei {nome}, un assistente AI personale che vive sul computer dell'utente.",
             f"Rispondi sempre in {self.cfg['lingua']}, in modo chiaro, amichevole e diretto.",
             "Sei pratico: se non sai una cosa lo dici, e proponi come scoprirla.",
         ]
+        if query:
+            try:
+                manuale = conoscenza.cerca(query)
+                if manuale:
+                    parti.append("Materiale dai manuali che hai studiato (usalo se pertinente "
+                                 "e cita il manuale):\n" + manuale)
+            except Exception:
+                pass
         if self.cfg["abilita_memoria"]:
             profilo = store.profilo_come_testo()
             if profilo:
@@ -129,7 +139,14 @@ class Mike:
                 "/modifica <cosa cambiare>     → migliora il progetto appena creato\n"
                 "/progetti                     → elenco dei progetti creati\n"
                 "/riprendi <nome>              → riapre un progetto vecchio (per modificarlo/avviarlo)\n"
+                "/template [tipo]              → crea un progetto da un modello pronto\n"
                 "/esperto on|off               → esegue le azioni senza chiedere /conferma\n"
+                "\n👁️ STRUMENTI AVANZATI\n"
+                "/schermo [domanda]            → Mike guarda lo schermo e ti aiuta (legge errori/finestre)\n"
+                "/impara <file>                → studia un manuale/PDF; poi rispondo su quello\n"
+                "/conoscenza  |  /dimentica    → manuali studiati · cancellali\n"
+                "/pianifica <n>|<cmd>|<quando> → attività automatica (es. pulizia settimanale)\n"
+                "/attivita  |  /rimuovi-attivita <n> → attività pianificate · rimuovi\n"
                 "/agenti <obiettivo>           → squadra di agenti che lavorano e si verificano\n"
                 "/migliora                     → Mike riflette sul suo lavoro e si auto-migliora\n"
                 "/aggiorna                     → cerca novità su internet e aggiorna le sue conoscenze\n"
@@ -238,6 +255,47 @@ class Mike:
             return self.modifica_software(t[len("/modifica "):].strip())
         if t.lower().startswith("/riprendi ") or t.lower().startswith("/riapri "):
             return self.riapri_progetto(t.split(" ", 1)[1].strip())
+        if t.lower().startswith("/schermo") or t.lower().startswith("/schermata"):
+            domanda = t.split(" ", 1)[1].strip() if " " in t else ""
+            return self.leggi_schermo(domanda)
+        if t.lower().startswith("/template"):
+            arg = t[len("/template"):].strip()
+            if not arg:
+                tpl = builder.elenca_template()
+                return ("🧩 Template pronti (crea in un secondo):\n"
+                        + "\n".join(f"  • {k} — {v}" for k, v in tpl.items())
+                        + "\nUsa: /template <nome>")
+            ok, msg, info = builder.crea_da_template(arg)
+            if ok:
+                self.ultimo_progetto = info
+                store.registra_progetto(info["nome"], info["cartella"], info["descrizione"], info["avvio"])
+                msg += self._proponi_prossimo_passo(info)
+            return msg
+        if t.lower().startswith("/impara "):
+            percorso = t[len("/impara "):].strip()
+            n, err = conoscenza.impara(percorso)
+            if err:
+                return f"Non sono riuscito a studiarlo: {err}"
+            return (f"📚 Ho studiato «{os.path.basename(percorso)}» ({n} sezioni). "
+                    "Ora puoi farmi domande su quel materiale.")
+        if t.lower() in ("/conoscenza", "/manuali"):
+            fonti = conoscenza.elenca()
+            if not fonti:
+                return "Non ho ancora studiato nessun manuale. Usa: /impara <percorso file>"
+            return "📚 Manuali studiati:\n" + "\n".join(f"  • {f} ({n} sezioni)" for f, n in fonti.items())
+        if t.lower() in ("/dimentica", "/dimentica-manuali"):
+            conoscenza.dimentica()
+            return "Ho dimenticato tutti i manuali studiati."
+        if t.lower().startswith("/pianifica "):
+            return self._pianifica_da_comando(t[len("/pianifica "):].strip())
+        if t.lower() in ("/attivita", "/attività", "/pianificate"):
+            voci = scheduler.elenca()
+            if not voci:
+                return "Nessuna attività pianificata. Crea con: /pianifica nome | comando | giornaliera 09:00"
+            return "📅 Attività pianificate:\n" + "\n".join(f"  • {n} → prossima: {p}" for n, p in voci)
+        if t.lower().startswith("/rimuovi-attivita "):
+            ok, msg = scheduler.rimuovi(t[len("/rimuovi-attivita "):].strip())
+            return msg
         if t.lower() in ("/progetti", "/progetto"):
             reg = store.progetti()
             if not reg:
@@ -882,7 +940,7 @@ class Mike:
                 contesto_sistema = istant
 
         self.cronologia.append({"ruolo": "utente", "testo": testo})
-        sistema = self._prompt_sistema(contesto_web, contesto_sistema)
+        sistema = self._prompt_sistema(contesto_web, contesto_sistema, query=testo)
         storia = self.cronologia[-MAX_STORIA:]
 
         ordine = [self.cfg["provider_principale"], self.cfg["provider_riserva"]]
@@ -961,7 +1019,7 @@ class Mike:
     def _ragiona(self, testo, su_token):
         """Percorso agentico: il modello sceglie ed esegue strumenti, poi risponde."""
         self.cronologia.append({"ruolo": "utente", "testo": testo})
-        sistema_base = self._prompt_sistema()
+        sistema_base = self._prompt_sistema(query=testo)
         storia = self.cronologia[-MAX_STORIA:]
         rag = Ragionatore(self.cfg, self._strumenti_agente(), log=self._log)
         risposta = rag.esegui(testo, storia, sistema_base, su_token)
@@ -990,6 +1048,48 @@ class Mike:
             pass
         messaggio += "\n\n💡 Puoi migliorarlo: scrivi /modifica <cosa cambiare> (o «aggiungi …»)."
         return messaggio + self._proponi_prossimo_passo(info)
+
+    def leggi_schermo(self, domanda=""):
+        """Fa uno screenshot e lo fa "leggere" a Gemini (messaggi d'errore, finestre…)."""
+        if not cfg_mod.chiave_valida(self.cfg.get("gemini_api_key", "")):
+            return ("Per leggere lo schermo serve la chiave Gemini in config.json "
+                    "(gratuita su https://aistudio.google.com/apikey).")
+        self._log("Catturo lo schermo…")
+        b64, err = schermo.cattura_base64()
+        if err:
+            return f"Non riesco a catturare lo schermo: {err}"
+        prompt = (domanda or "Guarda questo screenshot dello schermo. Dimmi cosa c'è, se ci "
+                  "sono errori o problemi, e come risolverli.") + " Rispondi in italiano."
+        self._log("Gemini sta leggendo lo schermo…")
+        try:
+            return "👁️ " + gemini.descrivi_immagine(
+                self.cfg["gemini_api_key"], self.cfg["modello_gemini"], b64, prompt, mime="image/png")
+        except Exception as e:
+            return f"Lettura schermo non riuscita: {e}"
+
+    def _pianifica_da_comando(self, testo):
+        """Formato: nome | comando | quando  (es. 'pulizia | Libera Spazio.bat | settimanale lun 09:00')."""
+        import re
+        parti = [p.strip() for p in testo.split("|")]
+        if len(parti) < 2:
+            return ("Formato: /pianifica <nome> | <comando o file> | <quando>\n"
+                    "Esempi di 'quando': 'giornaliera 09:00', 'settimanale lun 08:00', 'oraria'.\n"
+                    "Es.: /pianifica pulizia | \"C:\\Mike AI\\Libera Spazio.bat\" | settimanale lun 09:00")
+        nome, comando = parti[0], parti[1]
+        quando = parti[2].lower() if len(parti) > 2 else "giornaliera 09:00"
+        ora_m = re.search(r"(\d{1,2}:\d{2})", quando)
+        ora = ora_m.group(1) if ora_m else "09:00"
+        giorni = {"lun": "MON", "mar": "TUE", "mer": "WED", "gio": "THU",
+                  "ven": "FRI", "sab": "SAT", "dom": "SUN"}
+        giorno = next((v for k, v in giorni.items() if k in quando), None)
+        if "orari" in quando:
+            freq = "oraria"
+        elif "settiman" in quando or giorno:
+            freq = "settimanale"
+        else:
+            freq = "giornaliera"
+        ok, msg = scheduler.crea(nome, comando, frequenza=freq, ora=ora, giorno=giorno)
+        return msg
 
     def riapri_progetto(self, termine):
         """Riapre un progetto creato in passato, così puoi modificarlo/avviarlo."""
