@@ -1,6 +1,6 @@
 {
-  "versione": "0.19.5",
-  "note": "FIX blocco: tolta la messa in fila delle richieste (un comando lento non blocca piu gli altri)",
+  "versione": "0.19.6",
+  "note": "Mike non dice piu 'non posso': riconosce le domande sui file nascosti (le mostra) e il prompt gli insegna cosa sa fare davvero",
   "file": [
     "README.md",
     "avvia.py",
@@ -69,7 +69,7 @@
     "mike/agents/ragionatore.py": "4961743a7fd44276078d4baea17745f67a796a8d163783110f824b3e3d41a4b2",
     "mike/aggiornamento/__init__.py": "87b6bcd652c67eefe6553e32fe707b311568b18d41bba9d61df01e6b0c1e6419",
     "mike/aggiornamento/updater.py": "8fa3b6125a11ce780ef67ede6e2f6d6768f02eaef0adf000f8ecf98e2566db3d",
-    "mike/brain.py": "8d1fabeab80a4edd20a386203a8941734f50fa79f09fdf9e9b1d5caea9f3ad8e",
+    "mike/brain.py": "4a16162e40c8ef197c76c21ed8c41bf1f7cf50ec86f7626e5abf74cf60e38864",
     "mike/clienti/__init__.py": "012e55c020337646b801cc8406cc512c68d30d98bd0cef9acb69da180ba30f54",
     "mike/clienti/registro.py": "1c1f5f7d89074b9be8e58e187277dc3c7376edbb0e9465e6fcb2b420ab18a727",
     "mike/config.py": "73495986481fc4cffdca3a25936d8d20c132348178551c7d1ba9b175c6fa7ed0",

@@ -75,9 +75,15 @@ class Mike:
     def _prompt_sistema(self, contesto_web="", contesto_sistema="", query=""):
         nome = self.cfg["nome_assistente"]
         parti = [
-            f"Tu sei {nome}, un assistente AI personale che vive sul computer dell'utente.",
+            f"Tu sei {nome}, un assistente AI che VIVE ed AGISCE su questo computer Windows.",
             f"Rispondi sempre in {self.cfg['lingua']}, in modo chiaro, amichevole e diretto.",
-            "Sei pratico: se non sai una cosa lo dici, e proponi come scoprirla.",
+            "COSA SAI FARE DAVVERO su questo PC (NON dire mai «non posso» o «sono solo un "
+            "assistente»): analizzare lo spazio del disco compresi i FILE NASCOSTI di sistema, "
+            "liberare memoria, vedere i processi attivi, fare la diagnosi, leggere crash e log, "
+            "resettare password di account locali, creare account, creare/riparare programmi, "
+            "leggere lo schermo, cercare su internet, trovare indirizzi e mappe. "
+            "Se l'utente chiede una di queste cose, conferma che PUOI farlo e digli il comando "
+            "(es. «libera spazio», «/diagnosi»). Sei uno strumento che ESEGUE, non solo consiglia.",
         ]
         if query:
             try:
@@ -1395,9 +1401,11 @@ class Mike:
               "cosa vedi", "guarda la schermata", "guarda il monitor", "cosa c'è a schermo"):
             return "schermo"
 
-        # MEMORIA / SPAZIO / DISCO
+        # MEMORIA / SPAZIO / DISCO / FILE NASCOSTI
         if a("memoria", "spazio", "disco", "gb liber", "quanto spazio", "occupazione",
-              "hard disk", "hd pieno", "ssd"):
+              "hard disk", "hd pieno", "ssd", "file nascost", "file inutili", "file grossi",
+              "file grandi", "file che occupano", "vedi i file", "mostra i file",
+              "trova i file", "trovi i file", "quali file", "file di sistema"):
             return "spazio"
 
         # STATO veloce

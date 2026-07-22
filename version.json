@@ -1,4 +1,4 @@
 {
-  "versione": "0.19.5",
-  "note": "FIX blocco: tolta la messa in fila delle richieste (un comando lento non blocca piu gli altri)"
+  "versione": "0.19.6",
+  "note": "Mike non dice piu 'non posso': riconosce le domande sui file nascosti (le mostra) e il prompt gli insegna cosa sa fare davvero"
 }
