@@ -1,4 +1,4 @@
 {
-  "versione": "0.19.1",
-  "note": "FIX importante: le richieste concrete sul PC (verifica memoria, libera spazio, cosa gira...) ora ESEGUONO lo strumento vero invece di far chiacchierare il modello"
+  "versione": "0.19.2",
+  "note": "Rilevamento intenti molto piu robusto (problemi/lento/non va = diagnosi), Ollama come cervello principale (illimitato, no 429 Gemini), analisi resiliente (mostra dati reali anche se il modello e giu)"
 }

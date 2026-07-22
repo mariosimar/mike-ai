@@ -486,11 +486,17 @@ class Mike:
         tecnico = Agente(
             "Tecnico", "tecnico informatico esperto in diagnostica Windows e risoluzione problemi",
             self.cfg, provider)
-        analisi = tecnico.lavora(
-            "Analizza questo report di diagnostica di un PC Windows. Elenca i problemi in ordine "
-            "di priorità e per ognuno proponi una soluzione concreta e i passi da fare. "
-            "Distingui ciò che richiede i diritti di amministratore. Sii pratico, da tecnico.",
-            contesto=riassunto)
+        try:
+            analisi = tecnico.lavora(
+                "Analizza questo report di diagnostica di un PC Windows. Elenca i problemi in ordine "
+                "di priorità e per ognuno proponi una soluzione concreta e i passi da fare. "
+                "Distingui ciò che richiede i diritti di amministratore. Sii pratico, da tecnico.",
+                contesto=riassunto)
+        except Exception as e:
+            testo = (f"📊 DIAGNOSTICA DEL PC (dati reali):\n{riassunto}\n\n"
+                     f"(L'analisi AI non è disponibile ora: {e})")
+            self._salva_report("diagnosi", testo)
+            return testo
 
         testo = f"📊 RIASSUNTO DIAGNOSTICA:\n{riassunto}\n\n🩺 ANALISI DEL TECNICO:\n{analisi}"
         percorso = self._salva_report("diagnosi", testo)
@@ -512,10 +518,13 @@ class Mike:
         self._log("Analizzo cosa sta girando…")
         tecnico = Agente("Tecnico", "monitoraggio processi e prestazioni Windows",
                          self.cfg, provider)
-        analisi = tecnico.lavora(
-            "Questo è lo stato REALE del PC adesso. Dimmi in modo semplice cosa sta "
-            "girando, se c'è qualcosa di anomalo o che consuma troppo, e cosa eventualmente "
-            "chiudere. Sii concreto.", contesto=istant)
+        try:
+            analisi = tecnico.lavora(
+                "Questo è lo stato REALE del PC adesso. Dimmi in modo semplice cosa sta "
+                "girando, se c'è qualcosa di anomalo o che consuma troppo, e cosa eventualmente "
+                "chiudere. Sii concreto.", contesto=istant)
+        except Exception:
+            return f"🖥️ COSA STA FACENDO IL PC ORA (dati reali):\n{istant}"
         return f"🖥️ COSA STA FACENDO IL PC ORA:\n{istant}\n\n🩺 ANALISI:\n{analisi}"
 
     # ---------- analisi crash e file ----------
@@ -534,11 +543,14 @@ class Mike:
             self._log("L'agente Tecnico sta analizzando i crash…")
             tecnico = Agente("Tecnico", "esperto di crash, BSOD ed errori di Windows",
                              self.cfg, provider)
-            analisi = tecnico.lavora(
-                "Analizza questi log di un PC Windows. Individua le cause probabili di crash/errori, "
-                "raggruppa i problemi ricorrenti e proponi soluzioni concrete in ordine di priorità. "
-                "Spiega in modo pratico, da tecnico.", contesto=riassunto)
-            testo = f"📑 LOG RACCOLTI:\n{riassunto}\n\n🩺 ANALISI DEL TECNICO:\n{analisi}"
+            try:
+                analisi = tecnico.lavora(
+                    "Analizza questi log di un PC Windows. Individua le cause probabili di crash/errori, "
+                    "raggruppa i problemi ricorrenti e proponi soluzioni concrete in ordine di priorità. "
+                    "Spiega in modo pratico, da tecnico.", contesto=riassunto)
+                testo = f"📑 LOG RACCOLTI:\n{riassunto}\n\n🩺 ANALISI DEL TECNICO:\n{analisi}"
+            except Exception:
+                testo = f"📑 LOG DI CRASH/ERRORE (dati reali):\n{riassunto}"
         percorso = self._salva_report("crash", testo)
         if percorso:
             testo += f"\n\n💾 Report salvato in: {percorso}"
@@ -1337,51 +1349,91 @@ class Mike:
                    "gioco", "sito ", "tool", "automazione")
         return any(v in t for v in verbi) and any(o in t for o in oggetti)
 
+    def _rileva_intento(self, testo):
+        """Riconosce (per parole chiave) cosa vuole l'utente sul PC. Restituisce una
+        stringa-intento o None. Solo rilevamento, nessuna azione (così è testabile)."""
+        t = " " + testo.lower() + " "
+
+        def a(*chiavi):
+            return any(k in t for k in chiavi)
+
+        # domanda teorica ("cos'è la memoria RAM?") → non è un comando, lascia al modello
+        if a("cos'è", "cos e", "cosè", "cosa è", "che cos", "come funziona", "differenza tra",
+              "significa", "spiegami", "spiega ", "a cosa serve", "che cos'è"):
+            return None
+
+        # PULIZIA (azione che modifica)
+        if a("libera spazio", "liberare spazio", "libera la memoria", "libera memoria",
+              "fai spazio", "pulisci il disco", "pulisci disco", "svuota il disco",
+              "pulizia disco", "pulisci la memoria", "pulisci la cache", "libera il disco",
+              "pulisci i temp", "pulisci temp", "recupera spazio", "elimina i file inutili"):
+            return "pulisci"
+        if a("svuota il cestino", "svuota cestino", "pulisci il cestino"):
+            return "cestino"
+
+        # PROBLEMI / DIAGNOSI (parole chiave larghe)
+        if a("problem", "diagnos", "cosa non va", "non va il pc", "non funziona",
+              "è lento", "e lento", "va lento", "lentissimo", "rallenta tutto",
+              "check up", "checkup", "controlla il pc", "controlla il computer",
+              "controlla il sistema", "verifica il pc", "verifica il computer",
+              "verifica pc", "controlla pc", "scansiona il pc", "analizza il pc",
+              "stato di salute", "cosa c'è che non va"):
+            return "diagnosi"
+
+        # CRASH / BLOCCHI
+        if a("crash", "bsod", "schermata blu", "si è bloccato", "si e bloccato",
+              "si blocca", "freeze", "si riavvia da solo", "si spegne da solo", "impallato"):
+            return "crash"
+
+        # PROCESSI / cosa gira
+        if a("cosa gira", "cosa sta girando", "process", "cosa rallenta", "programmi attivi",
+              "cosa consuma", "cosa sta facendo il pc", "programmi aperti", "cosa è aperto"):
+            return "processi"
+
+        # SCHERMO
+        if a("leggi lo schermo", "guarda lo schermo", "leggi schermo", "sullo schermo",
+              "cosa vedi", "guarda la schermata", "guarda il monitor", "cosa c'è a schermo"):
+            return "schermo"
+
+        # MEMORIA / SPAZIO / DISCO
+        if a("memoria", "spazio", "disco", "gb liber", "quanto spazio", "occupazione",
+              "hard disk", "hd pieno", "ssd"):
+            return "spazio"
+
+        # STATO veloce
+        if a("come va il pc", "come sta il pc", "salute del pc", "stato del pc",
+              "stato pc", "va bene il pc", "monitora"):
+            return "stato"
+        return None
+
     def _intento_diretto(self, testo):
-        """Mappa le richieste concrete da tecnico direttamente sullo strumento reale.
-        Restituisce la risposta (eseguendo l'azione) oppure None se non è un intento noto."""
-        t = testo.lower()
-
-        def ha(*frasi):
-            return any(f in t for f in frasi)
-
-        # Azioni che MODIFICANO → passano dalla proposta/conferma (o esperto)
-        if ha("libera spazio", "libera la memoria", "libera memoria", "fai spazio",
-              "pulisci il disco", "pulisci disco", "svuota il disco", "pulizia disco",
-              "pulisci la memoria", "pulisci la cache", "libera il disco"):
+        """Esegue lo strumento reale per l'intento rilevato (o None)."""
+        intento = self._rileva_intento(testo)
+        if intento is None:
+            return None
+        if intento == "pulisci":
             return self._proponi(
                 "Eliminare le cache di sistema nascoste e recuperabili (temp, cestino, "
                 "cache aggiornamenti, miniature, component store)", azioni.libera_spazio_profondo)
-        if ha("pulisci i temp", "pulisci temp", "svuota il cestino", "svuota cestino"):
-            return self._proponi("Eliminare i file temporanei e svuotare il cestino",
-                                 azioni.manutenzione_sicura)
-
-        # Letture del PC → esegui SUBITO (sola lettura, nessun rischio)
-        if ha("verifica memoria", "controlla memoria", "verifica lo spazio", "controlla lo spazio",
-              "quanto spazio", "spazio libero", "spazio sul disco", "spazio su disco",
-              "disco pieno", "memoria piena", "memoria pc", "memoria del pc", "analizza spazio",
-              "analizza il disco", "verifica disco", "controlla disco", "verifica il pc",
-              "controlla il pc", "stato del disco", "quanta memoria"):
+        if intento == "cestino":
+            return self._proponi("Svuotare il cestino", azioni.svuota_cestino)
+        if intento == "diagnosi":
+            return self.diagnosi_pc()
+        if intento == "crash":
+            return self.analizza_crash()
+        if intento == "processi":
+            return self.vedi_processi()
+        if intento == "schermo":
+            return self.leggi_schermo()
+        if intento == "spazio":
             self._log("Analizzo la memoria/disco del PC…")
             ok, msg = azioni.analizza_spazio_profondo()
             return msg + "\n\n💡 Per liberarla scrivi: «libera spazio»."
-        if ha("cosa gira", "cosa sta girando", "cosa sta facendo il pc", "processi attivi",
-              "cosa rallenta", "che programmi girano", "programmi attivi", "cosa consuma"):
-            return self.vedi_processi()
-        if ha("stato del pc", "stato pc", "come va il pc", "salute del pc", "monitor"):
+        if intento == "stato":
             testo_s, allarmi = watch.controlla()
             r = f"🔎 STATO PC: {testo_s}"
             r += ("\n\n🔔 " + "\n".join(allarmi)) if allarmi else "\n✅ Tutto nella norma."
             return r
-        if ha("fai una diagnosi", "diagnosi del pc", "diagnostica il pc", "analizza il pc",
-              "controlla tutto il pc", "scansiona il pc"):
-            return self.diagnosi_pc()
-        if ha("leggi lo schermo", "guarda lo schermo", "cosa c'è sullo schermo",
-              "leggi schermo", "guarda la schermata", "cosa vedi sullo schermo"):
-            return self.leggi_schermo()
-        if ha("crash", "schermata blu", "bsod", "errori recenti", "perché si è bloccato",
-              "perche si e bloccato"):
-            return self.analizza_crash()
         return None
 
     def _e_richiesta_modifica(self, testo):
