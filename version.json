@@ -1,4 +1,4 @@
 {
-  "versione": "0.19.6",
-  "note": "Mike non dice piu 'non posso': riconosce le domande sui file nascosti (le mostra) e il prompt gli insegna cosa sa fare davvero"
+  "versione": "0.19.7",
+  "note": "Analisi file nascosti FULMINEA: da 18-40s a 0.8s (tolte le misure lente di AppData e WinSxS che non servono)"
 }

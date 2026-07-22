@@ -68,16 +68,9 @@ if ($hib -gt 0)   { "{0,-38} {1,7} GB   (ibernazione)" -f "hiberfil.sys", $hib }
 if ($page -gt 0)  { "{0,-38} {1,7} GB   (memoria virtuale)" -f "pagefile.sys", $page }
 if ($winold -gt 0){ "{0,-38} {1,7} GB   (vecchia installazione Windows)" -f "Windows.old", $winold }
 
-# Component store (WinSxS) — grande ma NON è tutto cancellabile
-$winsxs = Dim "$win\WinSxS"
-if ($winsxs -gt 0) { "{0,-38} {1,7} GB   (WinSxS: pulibile in parte con DISM)" -f "Archivio componenti", $winsxs }
+# Nota sull'archivio componenti (WinSxS): NON lo misuriamo (sarebbe lento);
+# si riduce con la pulizia DISM che fa gia' "libera spazio".
+"Archivio componenti (WinSxS)         si riduce con «libera spazio» (DISM)"
 
 ""
 ">> SPAZIO RECUPERABILE STIMATO (cache sicure): ~$([math]::Round($tot,1)) GB"
-""
-"--- CARTELLE PIU' GROSSE nella tua home ---"
-Get-ChildItem $env:USERPROFILE -Directory -Force -ErrorAction SilentlyContinue | ForEach-Object {
-    [pscustomobject]@{ N = $_.Name; GB = (Dim $_.FullName) }
-} | Sort-Object GB -Descending | Select-Object -First 6 | ForEach-Object {
-    if ($_.GB -gt 0.1) { "{0,-38} {1,7} GB" -f $_.N, $_.GB }
-}

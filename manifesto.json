@@ -1,6 +1,6 @@
 {
-  "versione": "0.19.6",
-  "note": "Mike non dice piu 'non posso': riconosce le domande sui file nascosti (le mostra) e il prompt gli insegna cosa sa fare davvero",
+  "versione": "0.19.7",
+  "note": "Analisi file nascosti FULMINEA: da 18-40s a 0.8s (tolte le misure lente di AppData e WinSxS che non servono)",
   "file": [
     "README.md",
     "avvia.py",
@@ -104,7 +104,7 @@
     "mike/recupero/recupero.py": "ef5449c1ea6a31d52d03f304bc150f3fa6ffc1c674253592f1e343dd9b0b17cf",
     "mike/riparazione/__init__.py": "aea7cb1bc916f306e654cd2a598508b019fb35116e98dd9e34352aea9ed258e1",
     "mike/riparazione/azioni.py": "ed8a031d3b7ea85d9626d57df59b4057ebc7677320a5f225a928377ba592a945",
-    "mike/riparazione/spazio.ps1": "bbe919923ae9fd7fd67f1985010b6094e809f92cfeabb455ba7e7e4fa58e9dc1",
+    "mike/riparazione/spazio.ps1": "d60e52d030bf97b4bacf9f96eeadd742be3158ec79463066090126c213156ab2",
     "mike/tools/__init__.py": "8e1c600e9266ba8fc657753ef1541d55065e46f1a901cbccc8c50713f4ec8302",
     "mike/tools/mappe.py": "e40e6cbb97d6b260fb6c47cbe1b782ddf71191ef5f2fdf9320dcd408387a99db",
     "mike/tools/schermo.py": "47a1bf7932392531df65b58e85242e3fd1410454bf91d24a6d37945337f29181",
