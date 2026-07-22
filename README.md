@@ -152,6 +152,28 @@ aprire il file `.json` con Mike e scrivere `/diagnosi` per l'analisi automatica.
 
 ---
 
+## 🛠️ Crea e migliora software (Mike sviluppatore)
+
+- **Creare:** `/crea un bot Telegram che…` (o scrivilo a parole) → Mike scrive il codice,
+  crea la cartella in `progetti/` e ti offre di avviarlo (con `/conferma`).
+- **Migliorare passo passo:** subito dopo, scrivi `/modifica aggiungi un menu` (o
+  semplicemente «*aggiungi …*», «*cambia …*») → Mike riscrive i file del progetto.
+- **Elenco:** `/progetti`.
+
+I file sono scritti solo dentro `progetti/`; l'esecuzione richiede sempre `/conferma`.
+Qualità: per progetti seri usa `/cervello gpt-oss:20b` o una chiave Claude/Gemini.
+
+---
+
+## 🔄 Auto-aggiornamento online (GitHub)
+
+Mike può aggiornarsi da solo da internet. È già tutto pronto sul tuo PC (git
+inizializzato, chiavi protette). Segui **`GUIDA_GITHUB.md`** (5 passi, una volta sola)
+e poi pubblichi gli aggiornamenti con **`Pubblica Aggiornamento.bat`**. Le tue chiavi
+API non vengono mai pubblicate.
+
+---
+
 ## 🤖 Modalità agentica (Mike ragiona come Claude)
 
 Non devi più conoscere i comandi `/`. Scrivi (o parla) in **linguaggio naturale** e

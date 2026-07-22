@@ -32,6 +32,8 @@ class Mike:
         self.progresso = None
         # Azione di riparazione in attesa di conferma (sicurezza).
         self.azione_in_sospeso = None
+        # Ultimo progetto software creato (per poterlo modificare).
+        self.ultimo_progetto = None
 
     def _log(self, messaggio):
         if self.progresso:
@@ -124,6 +126,8 @@ class Mike:
                 "/crea-account <nome> <pwd>    → crea un account locale di emergenza (serve admin)\n"
                 "\n🧠 INTELLIGENZA / CREAZIONE\n"
                 "/crea <cosa>                  → crea un programma/bot completo (scrive il codice)\n"
+                "/modifica <cosa cambiare>     → migliora il progetto appena creato\n"
+                "/progetti                     → elenco dei progetti creati\n"
                 "/agenti <obiettivo>           → squadra di agenti che lavorano e si verificano\n"
                 "/migliora                     → Mike riflette sul suo lavoro e si auto-migliora\n"
                 "/aggiorna                     → cerca novità su internet e aggiorna le sue conoscenze\n"
@@ -216,6 +220,16 @@ class Mike:
         if t.lower().startswith("/crea ") or t.lower().startswith("/costruisci "):
             desc = t.split(" ", 1)[1].strip() if " " in t else ""
             return self.crea_software(desc)
+        if t.lower().startswith("/modifica "):
+            return self.modifica_software(t[len("/modifica "):].strip())
+        if t.lower() in ("/progetti", "/progetto"):
+            elenco = builder.elenca_progetti()
+            if not elenco:
+                return "Non hai ancora creato progetti. Prova: /crea un programma che…"
+            attivo = ""
+            if self.ultimo_progetto:
+                attivo = f"\n\n(Attivo per le modifiche: {os.path.basename(self.ultimo_progetto.get('cartella',''))})"
+            return "📁 Progetti creati:\n" + "\n".join(f"  • {n}" for n in elenco) + attivo
         if t.lower().startswith("/agenti "):
             obiettivo = t[len("/agenti "):].strip()
             return self.esegui_squadra(obiettivo)
@@ -789,6 +803,12 @@ class Mike:
             su_token(risposta)
             return risposta
 
+        # Se c'è un progetto attivo e l'utente chiede una modifica → aggiorna il progetto
+        if self.ultimo_progetto and self._e_richiesta_modifica(testo):
+            risposta = self.modifica_software(testo)
+            su_token(risposta)
+            return risposta
+
         # 2) Rilevamento linguaggio naturale per Travelpayouts
         naturale = self._rileva_e_gestisci_naturale(testo, su_token)
         if naturale is not None:
@@ -922,13 +942,34 @@ class Mike:
         ok, messaggio, info = builder.crea_progetto(descrizione, self.cfg, log=self._log)
         if not ok:
             return messaggio
+        self.ultimo_progetto = info
+        messaggio += "\n\n💡 Puoi migliorarlo: scrivi /modifica <cosa cambiare> (o «aggiungi …»)."
         # Propone di avviarlo (esecuzione = azione sotto conferma)
         if info and info.get("avvio"):
             self.azione_in_sospeso = {
                 "descrizione": f"Avviare il programma appena creato ({info['avvio']})",
                 "esegui": lambda: builder.avvia_progetto(info),
             }
-            messaggio += "\n\n▶️ Vuoi che lo avvii ora? Scrivi /conferma (oppure /annulla)."
+            messaggio += "\n▶️ Vuoi che lo avvii ora? Scrivi /conferma (oppure /annulla)."
+        return messaggio
+
+    def modifica_software(self, richiesta):
+        """Modifica/migliora l'ultimo progetto creato."""
+        if not richiesta:
+            return "Dimmi cosa cambiare. Esempio: /modifica aggiungi un menu iniziale"
+        if not self.ultimo_progetto:
+            return ("Non c'è un progetto attivo da modificare. Prima crealo con /crea, "
+                    "oppure vedi /progetti.")
+        ok, messaggio, info = builder.modifica_progetto(
+            self.ultimo_progetto, richiesta, self.cfg, log=self._log)
+        if ok:
+            self.ultimo_progetto = info
+            if info.get("avvio"):
+                self.azione_in_sospeso = {
+                    "descrizione": f"Avviare il programma aggiornato ({info['avvio']})",
+                    "esegui": lambda: builder.avvia_progetto(info),
+                }
+                messaggio += "\n\n▶️ Vuoi avviarlo? /conferma  (o /annulla)."
         return messaggio
 
     def _e_richiesta_software(self, testo):
@@ -939,6 +980,14 @@ class Mike:
         oggetti = ("bot", "programma", "software", "script", "applicazione", "app ",
                    "gioco", "sito ", "tool", "automazione")
         return any(v in t for v in verbi) and any(o in t for o in oggetti)
+
+    def _e_richiesta_modifica(self, testo):
+        """True se l'utente chiede di modificare il progetto attivo."""
+        t = testo.lower().strip()
+        avvii = ("aggiungi", "aggiungici", "modifica", "cambia", "cambiami", "migliora",
+                 "correggi", "rendi", "fai in modo", "togli", "rimuovi", "sostituisci",
+                 "metti", "fai che")
+        return t.startswith(avvii)
 
     def _impara_su_utente(self, testo):
         """Rileva automaticamente il nome dell'utente da frasi tipo 'mi chiamo X'."""

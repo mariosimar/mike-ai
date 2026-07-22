@@ -114,6 +114,91 @@ def crea_progetto(descrizione, cfg, log=None):
     return True, messaggio, info
 
 
+SISTEMA_MODIFICA = (
+    "Sei un ingegnere del software SENIOR. Ti do un progetto ESISTENTE e una modifica "
+    "da applicare. Applica la modifica e restituisci TUTTI i file del progetto "
+    "AGGIORNATI e COMPLETI (non solo le differenze, non abbreviare). Mantieni ciò che "
+    "funziona, aggiungi/cambia solo il necessario. Commenti in italiano.\n\n"
+    "Rispondi SOLO con i file nel formato ESATTO, senza testo prima o dopo:\n"
+    "=== FILE: nomefile ===\n<contenuto completo>\n"
+    "=== AVVIO: comando ===\n=== NOTE: cosa è cambiato ===\n"
+)
+
+
+def elenca_progetti():
+    """Elenco delle cartelle di progetto create."""
+    if not os.path.isdir(CARTELLA_PROGETTI):
+        return []
+    return sorted(d for d in os.listdir(CARTELLA_PROGETTI)
+                  if os.path.isdir(os.path.join(CARTELLA_PROGETTI, d)))
+
+
+def _leggi_progetto(cartella, max_totale=14000):
+    """Legge i file di testo del progetto (con limite totale)."""
+    files, tot = [], 0
+    for radice, _dirs, fs in os.walk(cartella):
+        for f in sorted(fs):
+            p = os.path.join(radice, f)
+            rel = os.path.relpath(p, cartella).replace(os.sep, "/")
+            try:
+                with open(p, encoding="utf-8", errors="replace") as fh:
+                    c = fh.read()
+            except Exception:
+                continue
+            files.append((rel, c))
+            tot += len(c)
+            if tot > max_totale:
+                return files
+    return files
+
+
+def modifica_progetto(info, richiesta, cfg, log=None):
+    """Modifica un progetto esistente secondo la richiesta. (ok, messaggio, info)."""
+    log = log or (lambda s: None)
+    provider = agent_llm.provider_predefinito(cfg)
+    if not provider:
+        return False, "Per modificare serve un cervello attivo.", info
+    cartella = info.get("cartella")
+    if not cartella or not os.path.isdir(cartella):
+        return False, "Non trovo la cartella del progetto da modificare.", info
+
+    correnti = _leggi_progetto(cartella)
+    if not correnti:
+        return False, "Il progetto è vuoto o illeggibile.", info
+    blocco = "\n\n".join(f"=== FILE: {rel} ===\n{c}" for rel, c in correnti)
+
+    log("Sto modificando il progetto…")
+    try:
+        risposta = agent_llm.chiedi(
+            cfg, provider, SISTEMA_MODIFICA,
+            f"PROGETTO ATTUALE:\n{blocco}\n\nMODIFICA DA APPLICARE: {richiesta}",
+            max_token=3800)
+    except Exception as e:
+        return False, f"Modifica non riuscita: {e}", info
+
+    files, avvio, note = _parse(risposta)
+    if not files:
+        return False, "Non sono riuscito a produrre la versione modificata. Riprova o usa gpt-oss:20b.", info
+
+    creati = []
+    for rel, contenuto in files:
+        dest = os.path.join(cartella, rel.replace("/", os.sep))
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        with open(dest, "w", encoding="utf-8") as f:
+            f.write(contenuto)
+        creati.append(rel)
+
+    nuovo = dict(info)
+    nuovo["files"] = creati
+    if avvio:
+        nuovo["avvio"] = avvio
+    righe = [f"✅ Progetto aggiornato in: {cartella}", "", "📄 File aggiornati:"]
+    righe += [f"  • {c}" for c in creati]
+    if note:
+        righe += ["", "ℹ️ " + note]
+    return True, "\n".join(righe), nuovo
+
+
 def avvia_progetto(info):
     """Avvia il programma generato (da chiamare SOLO dopo conferma dell'utente)."""
     import subprocess
