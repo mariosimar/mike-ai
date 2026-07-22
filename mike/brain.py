@@ -128,6 +128,8 @@ class Mike:
                 "/crea <cosa>                  → crea un programma/bot completo (scrive il codice)\n"
                 "/modifica <cosa cambiare>     → migliora il progetto appena creato\n"
                 "/progetti                     → elenco dei progetti creati\n"
+                "/riprendi <nome>              → riapre un progetto vecchio (per modificarlo/avviarlo)\n"
+                "/esperto on|off               → esegue le azioni senza chiedere /conferma\n"
                 "/agenti <obiettivo>           → squadra di agenti che lavorano e si verificano\n"
                 "/migliora                     → Mike riflette sul suo lavoro e si auto-migliora\n"
                 "/aggiorna                     → cerca novità su internet e aggiorna le sue conoscenze\n"
@@ -142,6 +144,18 @@ class Mike:
         if t.lower() in ("/annulla", "/no"):
             self.azione_in_sospeso = None
             return "Azione annullata. Non ho toccato niente."
+        if t.lower().startswith("/esperto"):
+            arg = t[len("/esperto"):].strip().lower()
+            if arg in ("on", "si", "sì", "attiva", "1"):
+                self.cfg["modalita_esperto"] = True
+                return ("⚙️ MODALITÀ ESPERTO ATTIVA: eseguo le azioni subito, senza chiederti "
+                        "/conferma ogni volta. (Per renderla permanente: \"modalita_esperto\": true "
+                        "in config.json.) Le azioni restano quelle legittime.")
+            if arg in ("off", "no", "disattiva", "0"):
+                self.cfg["modalita_esperto"] = False
+                return "Modalità esperto disattivata: tornerò a chiederti /conferma prima di agire."
+            return (f"Modalità esperto: {'ATTIVA' if self.cfg.get('modalita_esperto') else 'disattivata'}. "
+                    "Usa /esperto on  oppure  /esperto off.")
         # --- diagnosi / log ---
         if t.lower() in ("/diagnosi", "/diagnostica"):
             return self.diagnosi_pc()
@@ -222,14 +236,20 @@ class Mike:
             return self.crea_software(desc)
         if t.lower().startswith("/modifica "):
             return self.modifica_software(t[len("/modifica "):].strip())
+        if t.lower().startswith("/riprendi ") or t.lower().startswith("/riapri "):
+            return self.riapri_progetto(t.split(" ", 1)[1].strip())
         if t.lower() in ("/progetti", "/progetto"):
-            elenco = builder.elenca_progetti()
-            if not elenco:
+            reg = store.progetti()
+            if not reg:
                 return "Non hai ancora creato progetti. Prova: /crea un programma che…"
-            attivo = ""
+            righe = ["📁 I tuoi progetti (dal più recente):"]
+            for p in reversed(reg[-15:]):
+                d = f" — {p['descrizione'][:60]}" if p.get("descrizione") else ""
+                righe.append(f"  • {p['nome']}{d}  ({p.get('quando','')})")
+            righe.append("\nPer riprenderne uno: /riprendi <nome o parola chiave>")
             if self.ultimo_progetto:
-                attivo = f"\n\n(Attivo per le modifiche: {os.path.basename(self.ultimo_progetto.get('cartella',''))})"
-            return "📁 Progetti creati:\n" + "\n".join(f"  • {n}" for n in elenco) + attivo
+                righe.append(f"(Attivo ora: {self.ultimo_progetto.get('nome','') or os.path.basename(self.ultimo_progetto.get('cartella',''))})")
+            return "\n".join(righe)
         if t.lower().startswith("/agenti "):
             obiettivo = t[len("/agenti "):].strip()
             return self.esegui_squadra(obiettivo)
@@ -461,7 +481,14 @@ class Mike:
                 "  /spazio           → quanto spazio si può recuperare (veloce)")
 
     def _proponi(self, descrizione, funzione):
-        """Mette un'azione in sospeso e chiede conferma all'utente."""
+        """Propone un'azione. Con la modalità esperto la esegue subito, senza conferma."""
+        if self.cfg.get("modalita_esperto"):
+            self._log(f"[esperto] Eseguo: {descrizione}")
+            try:
+                ok, msg = funzione()
+            except Exception as e:
+                return f"Errore durante l'esecuzione: {e}"
+            return f"⚙️ (esperto) {descrizione}:\n{msg}"
         self.azione_in_sospeso = {"descrizione": descrizione, "esegui": funzione}
         return (f"⚠️ Sto per: {descrizione}.\n"
                 "Scrivi /conferma per procedere, oppure /annulla per fermarti.")
@@ -803,6 +830,19 @@ class Mike:
             su_token(risposta)
             return risposta
 
+        # Riaprire un progetto salvato in linguaggio naturale ("riapri il bot di ieri")
+        tl = testo.lower().strip()
+        if tl.startswith(("riapri ", "riprendi ", "riprendiamo ")):
+            risposta = self.riapri_progetto(testo.split(" ", 1)[1].strip())
+            su_token(risposta)
+            return risposta
+        # Avviare il progetto attivo con una frase semplice
+        if self.ultimo_progetto and tl in ("avvialo", "avvia", "avvia il progetto",
+                                           "fallo partire", "eseguilo", "esegui", "lancialo"):
+            _ok, risposta = self._esegui_con_autofix(self.ultimo_progetto)
+            su_token(risposta)
+            return risposta
+
         # Se c'è un progetto attivo e l'utente chiede una modifica → aggiorna il progetto
         if self.ultimo_progetto and self._e_richiesta_modifica(testo):
             risposta = self.modifica_software(testo)
@@ -943,8 +983,32 @@ class Mike:
         if not ok:
             return messaggio
         self.ultimo_progetto = info
+        try:
+            store.registra_progetto(info.get("nome", ""), info.get("cartella", ""),
+                                    descrizione, info.get("avvio", ""))
+        except Exception:
+            pass
         messaggio += "\n\n💡 Puoi migliorarlo: scrivi /modifica <cosa cambiare> (o «aggiungi …»)."
         return messaggio + self._proponi_prossimo_passo(info)
+
+    def riapri_progetto(self, termine):
+        """Riapre un progetto creato in passato, così puoi modificarlo/avviarlo."""
+        p = store.trova_progetto(termine)
+        if not p:
+            return f"Non trovo un progetto simile a «{termine}». Vedi /progetti per l'elenco."
+        cartella = p.get("cartella", "")
+        if not os.path.isdir(cartella):
+            return f"Il progetto «{p['nome']}» risulta in memoria ma la cartella non c'è più."
+        files = []
+        for radice, _dirs, fs in os.walk(cartella):
+            for f in fs:
+                files.append(os.path.relpath(os.path.join(radice, f), cartella).replace(os.sep, "/"))
+        self.ultimo_progetto = {"cartella": cartella, "avvio": p.get("avvio", ""),
+                                "files": files, "nome": p.get("nome", ""),
+                                "descrizione": p.get("descrizione", "")}
+        return (f"📂 Riaperto «{p['nome']}»"
+                + (f" — {p['descrizione']}" if p.get("descrizione") else "")
+                + ".\nOra puoi: /modifica <cosa cambiare>  oppure  «avvialo».")
 
     def modifica_software(self, richiesta):
         """Modifica/migliora l'ultimo progetto creato."""

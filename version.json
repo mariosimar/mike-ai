@@ -1,4 +1,4 @@
 {
-  "versione": "0.16.0",
-  "note": "Auto-debug: se un programma creato va in errore, Mike legge il traceback, corregge il codice e riprova (max 2 tentativi)"
+  "versione": "0.17.0",
+  "note": "Modalita esperto (meno conferme), memoria dei progetti (riprendi/riapri), sincronizzazione USB"
 }

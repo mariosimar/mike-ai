@@ -113,7 +113,8 @@ def crea_progetto(descrizione, cfg, log=None):
     if avvio:
         righe += ["", f"▶️ Per avviarlo: {avvio}"]
     messaggio = "\n".join(righe)
-    info = {"cartella": cartella, "avvio": avvio, "files": creati}
+    info = {"cartella": cartella, "avvio": avvio, "files": creati,
+            "nome": nome, "descrizione": descrizione}
     return True, messaggio, info
 
 

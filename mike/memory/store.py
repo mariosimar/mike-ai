@@ -17,7 +17,8 @@ CARTELLA_DATI = os.path.join(RADICE, "dati")
 PERCORSO_MEMORIA = os.path.join(CARTELLA_DATI, "memoria.json")
 PERCORSO_LOG = os.path.join(CARTELLA_DATI, "conversazioni.log")
 
-VUOTA = {"fatti": [], "diario": [], "auto_istruzioni": [], "profilo": {"nome": "", "note": []}}
+VUOTA = {"fatti": [], "diario": [], "auto_istruzioni": [],
+         "profilo": {"nome": "", "note": []}, "progetti": []}
 
 
 def _assicura_cartella():
@@ -35,9 +36,55 @@ def carica():
         dati.setdefault("diario", [])
         dati.setdefault("auto_istruzioni", [])
         dati.setdefault("profilo", {"nome": "", "note": []})
+        dati.setdefault("progetti", [])
         return dati
     except (json.JSONDecodeError, OSError):
-        return {"fatti": [], "diario": [], "auto_istruzioni": [], "profilo": {"nome": "", "note": []}}
+        return {"fatti": [], "diario": [], "auto_istruzioni": [],
+                "profilo": {"nome": "", "note": []}, "progetti": []}
+
+
+# ---------- registro dei progetti creati (per riaprirli dopo) ----------
+
+def registra_progetto(nome, cartella, descrizione="", avvio=""):
+    m = carica()
+    voce = {"nome": nome, "cartella": cartella, "descrizione": descrizione,
+            "avvio": avvio, "quando": time.strftime("%Y-%m-%d %H:%M")}
+    m["progetti"] = [p for p in m.get("progetti", []) if p.get("cartella") != cartella]
+    m["progetti"].append(voce)
+    m["progetti"] = m["progetti"][-60:]
+    salva(m)
+
+
+def progetti():
+    return carica().get("progetti", [])
+
+
+_STOP = {"il", "lo", "la", "i", "gli", "le", "un", "uno", "una", "di", "del", "dei",
+         "della", "che", "mio", "mia", "tuo", "quel", "quello", "questo", "ieri",
+         "progetto", "programma", "app", "the", "a", "e", "o", "con", "per", "da"}
+
+
+def trova_progetto(termine):
+    """Cerca un progetto per PAROLE CHIAVE nel nome o nella descrizione.
+
+    Ignora articoli/preposizioni. Restituisce il progetto più recente che combacia
+    di più; se il termine è solo generico ('il progetto di ieri') dà il più recente.
+    """
+    import re
+    parole = [w for w in re.findall(r"[a-z0-9]+", (termine or "").lower())
+              if w not in _STOP and len(w) > 1]
+    lista = carica().get("progetti", [])
+    if not lista:
+        return None
+    if not parole:
+        return lista[-1]  # nessuna parola utile: il più recente
+    migliore, punteggio = None, 0
+    for p in reversed(lista):
+        blob = (p.get("nome", "") + " " + p.get("descrizione", "")).lower().replace("_", " ")
+        score = sum(1 for w in parole if w in blob)
+        if score > punteggio:
+            punteggio, migliore = score, p
+    return migliore
 
 
 # ---------- profilo dell'utente (così Mike ti conosce) ----------

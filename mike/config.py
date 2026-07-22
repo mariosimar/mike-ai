@@ -23,6 +23,7 @@ PREDEFINITI = {
     "aggiornamento_sorgente": "",
     "aggiornamento_auto": True,
     "modalita_agente": True,
+    "modalita_esperto": False,
 }
 
 
