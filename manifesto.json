@@ -1,6 +1,6 @@
 {
-  "versione": "0.11.0",
-  "note": "Mike v0.11.0",
+  "versione": "0.14.0",
+  "note": "Auto-riparazione pip, installazione librerie, generatore software, GitHub auto-update",
   "file": [
     "README.md",
     "avvia.py",
@@ -50,7 +50,7 @@
     "mike/web/server.py"
   ],
   "hash": {
-    "README.md": "a1da1c00b2281391626828979b6c5d50aad43675bc3386f3e7178ba3aac5255b",
+    "README.md": "df81a0af5950633b03cb6d4aefc2d3f469e9469024f07dd7ec6c1e147275cfaa",
     "avvia.py": "2047463d3b4de758cee5158ccc685f91a22af636c00e8e5de4baeb778309fe8b",
     "mike/__init__.py": "7e4884c7577d1c4f27c9bd892703694cdf0785c5d3d5ffdf52f761fd60ca8e79",
     "mike/agents/__init__.py": "2429d9d542dcbe88da4974a1cf3f3b6ac4a9e78afd4f1626c857996b9283e43b",
@@ -60,10 +60,10 @@
     "mike/agents/ragionatore.py": "4961743a7fd44276078d4baea17745f67a796a8d163783110f824b3e3d41a4b2",
     "mike/aggiornamento/__init__.py": "87b6bcd652c67eefe6553e32fe707b311568b18d41bba9d61df01e6b0c1e6419",
     "mike/aggiornamento/updater.py": "8fa3b6125a11ce780ef67ede6e2f6d6768f02eaef0adf000f8ecf98e2566db3d",
-    "mike/brain.py": "44360954bf660cbf4679edff3e786c15330f6a8d69edf27d29474593810c006f",
+    "mike/brain.py": "40edf438747945c98b42352a2822efd86e1b75fab308bab44ef59a03cc6b87ea",
     "mike/config.py": "853b84dcbac0d02830b5608142cb90f333bb94f5631424d64a6ad4fdfc4b55f5",
     "mike/costruttore/__init__.py": "6d4ed4a9a479d7d33264941af5da33e89c0a1966c069d8ba7c1f2686c2b49b5c",
-    "mike/costruttore/builder.py": "39434576272b37e164c189568682ddbe48c348ab02160a90f17c9b6acfc37b27",
+    "mike/costruttore/builder.py": "378812bdec3a603029180c7051b03f7df603862339ca7b0ef4a0d6f2f1a22358",
     "mike/diagnostica/__init__.py": "1558a731479815c1a9b0c3481ef8b2b1792e7611b6b8bba9c0a64ac3becdbc35",
     "mike/diagnostica/formatta.ps1": "410459ce58574061e9acba2cf35b01bb9a53380375139a91d7081337e5f31401",
     "mike/diagnostica/live.ps1": "6c61e44e666525dba00c615c5ef936624e48df0c4e5bbd5abb3b7a79236a675e",

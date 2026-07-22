@@ -1,5 +1,4 @@
 {
   "versione": "0.14.0",
-  "data": "2026-06-02",
-  "note": "Auto-riparazione di pip (aggiorna pip, toglie versioni fisse, prova uno per uno, spiega l'errore) + 'Collega GitHub.bat' per l'auto-aggiornamento online (accesso approvato dall'utente nel browser, credenziali mai gestite da Mike)."
+  "note": "Auto-riparazione pip, installazione librerie, generatore software, GitHub auto-update"
 }
