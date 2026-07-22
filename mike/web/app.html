@@ -114,7 +114,8 @@
     <div id="chat"></div>
     <div class="input-row">
       <button class="ghost" id="btn-voce" title="Mike legge le risposte">🔊</button>
-      <button class="ghost" id="btn-mic" title="Parla a Mike">🎤</button>
+      <button class="ghost" id="btn-mic" title="Parla a Mike (una volta)">🎤</button>
+      <button class="ghost" id="btn-continuo" title="Ascolto continuo a mani libere">🎙️</button>
       <input id="txt" placeholder="Chiedimi qualsiasi cosa…  (mappe, indirizzi, PC, internet)">
       <button class="act" id="btn-invia">INVIA ▸</button>
     </div>
@@ -192,6 +193,27 @@ $('#btn-mic').onclick=()=>{
     recog.onresult=e=>{$('#txt').value=e.results[0][0].transcript;invia();};
     recog.onend=()=>$('#btn-mic').classList.remove('attivo');}
   $('#btn-mic').classList.add('attivo');recog.start();
+};
+/* ascolto continuo a mani libere */
+let recogC=null, continuoOn=false;
+$('#btn-continuo').onclick=()=>{
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){alert('Riconoscimento vocale non disponibile (usa Chrome o Edge).');return;}
+  continuoOn=!continuoOn;
+  $('#btn-continuo').classList.toggle('attivo',continuoOn);
+  if(continuoOn){
+    voceOn=true; $('#btn-voce').classList.add('attivo');   // mani libere: Mike risponde a voce
+    if(!recogC){
+      recogC=new SR(); recogC.lang='it-IT'; recogC.continuous=true; recogC.interimResults=false;
+      recogC.onresult=e=>{const t=e.results[e.results.length-1][0].transcript.trim(); if(t) invia(t);};
+      recogC.onend=()=>{ if(continuoOn){ try{recogC.start();}catch(e){} } }; // si riavvia da solo
+    }
+    try{recogC.start();}catch(e){}
+    setStato('🎙️ Ascolto continuo attivo — parla pure');
+  } else {
+    try{recogC.stop();}catch(e){}
+    setStato('📡 Pronto');
+  }
 };
 
 /* ---------- TABS ---------- */

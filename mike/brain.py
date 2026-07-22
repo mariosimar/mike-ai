@@ -14,6 +14,8 @@ from .tools import mappe, schermo
 from .costruttore import builder
 from .pianificatore import scheduler
 from .conoscenza import base as conoscenza
+from .monitor import watch
+from .clienti import registro as clienti
 from .diagnostica import scanner, logs, live
 from .recupero import recupero
 from .riparazione import azioni
@@ -147,6 +149,10 @@ class Mike:
                 "/conoscenza  |  /dimentica    → manuali studiati · cancellali\n"
                 "/pianifica <n>|<cmd>|<quando> → attività automatica (es. pulizia settimanale)\n"
                 "/attivita  |  /rimuovi-attivita <n> → attività pianificate · rimuovi\n"
+                "/monitor                      → stato del PC e avvisi (RAM/disco)\n"
+                "/clienti                      → elenco clienti\n"
+                "/cliente <nome>               → scheda del cliente (o la crea)\n"
+                "/intervento <cliente> | <cosa> → registra un intervento fatto\n"
                 "/agenti <obiettivo>           → squadra di agenti che lavorano e si verificano\n"
                 "/migliora                     → Mike riflette sul suo lavoro e si auto-migliora\n"
                 "/aggiorna                     → cerca novità su internet e aggiorna le sue conoscenze\n"
@@ -296,6 +302,40 @@ class Mike:
         if t.lower().startswith("/rimuovi-attivita "):
             ok, msg = scheduler.rimuovi(t[len("/rimuovi-attivita "):].strip())
             return msg
+        if t.lower() in ("/monitor", "/monitoraggio", "/salute"):
+            testo, allarmi = watch.controlla()
+            r = f"🔎 STATO PC: {testo}"
+            if allarmi:
+                r += "\n\n🔔 ATTENZIONE:\n" + "\n".join(f"  • {a}" for a in allarmi)
+                if any("spazio" in a.lower() or "disco" in a.lower() for a in allarmi):
+                    r += "\n\n💡 Posso liberare spazio: scrivi /libera-spazio"
+            else:
+                r += "\n✅ Tutto nella norma."
+            return r
+        # --- storico clienti ---
+        if t.lower() in ("/clienti", "/clientela"):
+            elenco = clienti.elenca()
+            if not elenco:
+                return ("Nessun cliente registrato. Crea con: /cliente <nome>\n"
+                        "Registra un intervento con: /intervento <cliente> | <cosa hai fatto>")
+            righe = ["👥 CLIENTI:"]
+            for nome, n_int, pc in elenco:
+                righe.append(f"  • {nome}" + (f" [{pc}]" if pc else "") + f" — {n_int} interventi")
+            return "\n".join(righe)
+        if t.lower().startswith("/cliente "):
+            nome = t[len("/cliente "):].strip()
+            s = clienti.scheda(nome)
+            if s:
+                return s
+            clienti.aggiungi_o_prendi(nome)
+            return f"👤 Scheda creata per «{nome}». Registra gli interventi con:\n/intervento {nome} | <cosa hai fatto>"
+        if t.lower().startswith("/intervento "):
+            resto = t[len("/intervento "):]
+            if "|" not in resto:
+                return "Formato: /intervento <cliente> | <cosa hai fatto>"
+            nome, cosa = [p.strip() for p in resto.split("|", 1)]
+            n = clienti.registra_intervento(nome, cosa)
+            return f"✅ Intervento #{n} registrato per «{nome}»: {cosa}"
         if t.lower() in ("/progetti", "/progetto"):
             reg = store.progetti()
             if not reg:
