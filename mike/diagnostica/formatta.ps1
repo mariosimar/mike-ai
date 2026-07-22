@@ -1,4 +1,4 @@
-# formatta.ps1 — legge un report JSON prodotto da scan.ps1 e lo stampa in
+# formatta.ps1 - legge un report JSON prodotto da scan.ps1 e lo stampa in
 # formato leggibile da un umano (per il tecnico, anche su PC senza Python).
 # Uso:  powershell -ExecutionPolicy Bypass -File formatta.ps1 -Percorso report.json
 
@@ -8,7 +8,7 @@ $ErrorActionPreference = "SilentlyContinue"
 $r = Get-Content $Percorso -Raw | ConvertFrom-Json
 
 "==================================================="
-"   DIAGNOSI PC — generata da Mike"
+"   DIAGNOSI PC - generata da Mike"
 "==================================================="
 $s = $r.sistema
 "PC:        $($s.nome_pc)  ($($s.produttore) $($s.modello))"

@@ -1,4 +1,4 @@
 {
-  "versione": "0.19.7",
-  "note": "Analisi file nascosti FULMINEA: da 18-40s a 0.8s (tolte le misure lente di AppData e WinSxS che non servono)"
+  "versione": "0.19.8",
+  "note": "Fix formatta.ps1: il trattino lungo in una stringa rompeva PowerShell (Diagnosi PC.bat non generava il report). Ora ASCII."
 }

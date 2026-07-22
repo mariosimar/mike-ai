@@ -1,6 +1,6 @@
 {
-  "versione": "0.19.7",
-  "note": "Analisi file nascosti FULMINEA: da 18-40s a 0.8s (tolte le misure lente di AppData e WinSxS che non servono)",
+  "versione": "0.19.8",
+  "note": "Fix formatta.ps1: il trattino lungo in una stringa rompeva PowerShell (Diagnosi PC.bat non generava il report). Ora ASCII.",
   "file": [
     "README.md",
     "avvia.py",
@@ -78,7 +78,7 @@
     "mike/costruttore/__init__.py": "6d4ed4a9a479d7d33264941af5da33e89c0a1966c069d8ba7c1f2686c2b49b5c",
     "mike/costruttore/builder.py": "0b60293a561a3d15a55f4bad7084bbed8e10b78b55670c6f428f8fc9db71a75f",
     "mike/diagnostica/__init__.py": "1558a731479815c1a9b0c3481ef8b2b1792e7611b6b8bba9c0a64ac3becdbc35",
-    "mike/diagnostica/formatta.ps1": "410459ce58574061e9acba2cf35b01bb9a53380375139a91d7081337e5f31401",
+    "mike/diagnostica/formatta.ps1": "801ab69e7f2ad66becf6919445423a4fa66a2b61b89c58a6f781f5dd8f464263",
     "mike/diagnostica/live.ps1": "6c61e44e666525dba00c615c5ef936624e48df0c4e5bbd5abb3b7a79236a675e",
     "mike/diagnostica/live.py": "419d0f5949efd5d99e88e18d6818eb01f3941158330944bc4ec90e765117c3ff",
     "mike/diagnostica/logs.ps1": "fe63e877c1932919dc13b20a24b486be2a4c065591665f00133cfef9c5761a64",
