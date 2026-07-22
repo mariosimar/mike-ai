@@ -1,5 +1,5 @@
 {
-  "versione": "0.12.0",
+  "versione": "0.14.0",
   "data": "2026-06-02",
-  "note": "Sviluppo iterativo (/modifica migliora un progetto esistente riscrivendo i file) + auto-aggiornamento online via GitHub pronto (git inizializzato, chiavi protette, guida e pulsante di pubblicazione)."
+  "note": "Auto-riparazione di pip (aggiorna pip, toglie versioni fisse, prova uno per uno, spiega l'errore) + 'Collega GitHub.bat' per l'auto-aggiornamento online (accesso approvato dall'utente nel browser, credenziali mai gestite da Mike)."
 }

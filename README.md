@@ -160,8 +160,13 @@ aprire il file `.json` con Mike e scrivere `/diagnosi` per l'analisi automatica.
   semplicemente «*aggiungi …*», «*cambia …*») → Mike riscrive i file del progetto.
 - **Elenco:** `/progetti`.
 
-I file sono scritti solo dentro `progetti/`; l'esecuzione richiede sempre `/conferma`.
-Qualità: per progetti seri usa `/cervello gpt-oss:20b` o una chiave Claude/Gemini.
+- **Librerie automatiche:** se il progetto usa pacchetti extra (es. `requests`,
+  `python-telegram-bot`), Mike li **rileva e li installa con pip** da solo (con
+  `/conferma`), poi avvia. Non devi installare niente a mano.
+
+I file sono scritti solo dentro `progetti/`; installazione ed esecuzione richiedono
+sempre `/conferma`. Qualità: per progetti seri usa `/cervello gpt-oss:20b` o una
+chiave Claude/Gemini.
 
 ---
 

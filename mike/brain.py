@@ -944,14 +944,7 @@ class Mike:
             return messaggio
         self.ultimo_progetto = info
         messaggio += "\n\n💡 Puoi migliorarlo: scrivi /modifica <cosa cambiare> (o «aggiungi …»)."
-        # Propone di avviarlo (esecuzione = azione sotto conferma)
-        if info and info.get("avvio"):
-            self.azione_in_sospeso = {
-                "descrizione": f"Avviare il programma appena creato ({info['avvio']})",
-                "esegui": lambda: builder.avvia_progetto(info),
-            }
-            messaggio += "\n▶️ Vuoi che lo avvii ora? Scrivi /conferma (oppure /annulla)."
-        return messaggio
+        return messaggio + self._proponi_prossimo_passo(info)
 
     def modifica_software(self, richiesta):
         """Modifica/migliora l'ultimo progetto creato."""
@@ -964,13 +957,66 @@ class Mike:
             self.ultimo_progetto, richiesta, self.cfg, log=self._log)
         if ok:
             self.ultimo_progetto = info
+            messaggio += self._proponi_prossimo_passo(info)
+        return messaggio
+
+    def _proponi_prossimo_passo(self, info):
+        """Dopo aver creato/modificato: se servono librerie propone di installarle
+        (poi avviare); altrimenti propone direttamente l'avvio. Restituisce testo extra."""
+        try:
+            libs = builder.dipendenze(info.get("cartella", ""))
+        except Exception:
+            libs = []
+        if libs:
+            self.azione_in_sospeso = {
+                "descrizione": f"Installare le librerie necessarie ({', '.join(libs)}) e poi avviare",
+                "esegui": lambda: self._installa_e_poi_avvia(info),
+            }
+            return (f"\n\n📦 Questo progetto usa librerie extra: {', '.join(libs)}.\n"
+                    "▶️ Vuoi che le installi io (e poi avvii)? Scrivi /conferma  (o /annulla).")
+        if info.get("avvio"):
+            self.azione_in_sospeso = {
+                "descrizione": f"Avviare il programma ({info['avvio']})",
+                "esegui": lambda: builder.avvia_progetto(info),
+            }
+            return "\n\n▶️ Vuoi che lo avvii ora? Scrivi /conferma  (o /annulla)."
+        return ""
+
+    def _installa_e_poi_avvia(self, info):
+        """Installa le librerie (con auto-riparazione) e poi ripropone l'avvio."""
+        self._log("Installo le librerie con pip…")
+        ok, msg, errore = builder.installa_dipendenze(info.get("cartella", ""), log=self._log)
+        if ok:
             if info.get("avvio"):
                 self.azione_in_sospeso = {
-                    "descrizione": f"Avviare il programma aggiornato ({info['avvio']})",
+                    "descrizione": f"Avviare il programma ({info['avvio']})",
                     "esegui": lambda: builder.avvia_progetto(info),
                 }
-                messaggio += "\n\n▶️ Vuoi avviarlo? /conferma  (o /annulla)."
-        return messaggio
+                msg += "\n\n▶️ Ora posso avviarlo: scrivi /conferma  (o /annulla)."
+            return True, msg
+        # Fallita anche l'auto-riparazione: faccio spiegare l'errore in parole semplici
+        spiegazione = self._spiega_errore_pip(errore)
+        if spiegazione:
+            msg += "\n\n🩺 " + spiegazione
+        return True, msg
+
+    def _spiega_errore_pip(self, errore):
+        """Chiede al modello di spiegare l'errore di pip e cosa fare (in italiano)."""
+        if not errore:
+            return ""
+        provider = agent_llm.provider_predefinito(self.cfg)
+        if not provider:
+            return ""
+        try:
+            return agent_llm.chiedi(
+                self.cfg, provider,
+                "Sei un tecnico Python. Spiega in 2-3 frasi semplici perché questa "
+                "installazione pip è fallita e cosa deve fare l'utente per risolvere "
+                "(es. installare un compilatore, cambiare versione di Python, un pacchetto "
+                "di sistema). In italiano, concreto.",
+                f"Errore di pip:\n{errore}", max_token=250)
+        except Exception:
+            return ""
 
     def _e_richiesta_software(self, testo):
         """True se l'utente sta chiedendo di CREARE un programma/bot/script."""
