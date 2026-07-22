@@ -1,0 +1,18 @@
+{
+  "_nota": "Copia questo file in 'config.json' e incolla le tue chiavi. Non condividere config.json con nessuno!",
+
+  "claude_api_key": "INCOLLA-QUI-LA-CHIAVE-CLAUDE",
+  "gemini_api_key": "INCOLLA-QUI-LA-CHIAVE-GEMINI",
+
+  "modello_claude": "claude-sonnet-4-6",
+  "modello_gemini": "gemini-2.0-flash",
+
+  "provider_principale": "claude",
+  "provider_riserva": "gemini",
+
+  "nome_assistente": "Mike",
+  "lingua": "italiano",
+
+  "abilita_ricerca_web": true,
+  "abilita_memoria": true
+}

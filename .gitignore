@@ -1,0 +1,15 @@
+# --- SICUREZZA: non pubblicare mai le chiavi e i dati personali ---
+config.json
+dati/
+progetti/
+.claude/
+
+# --- File temporanei / generati ---
+__pycache__/
+*.pyc
+*.pyo
+*.log
+Report/
+
+# Nota: config.example.json (senza chiavi) VIENE pubblicato, così gli altri
+# sanno quali voci mettere. Il tuo config.json reale resta solo sul tuo PC.

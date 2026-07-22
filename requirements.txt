@@ -1,0 +1,4 @@
+# Mike non ha dipendenze esterne: usa solo la libreria standard di Python.
+# (tkinter, urllib, json sono già inclusi in Python su Windows.)
+#
+# In futuro, se vorrai aggiungere funzioni avanzate, qui andranno le librerie.
