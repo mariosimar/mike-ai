@@ -947,6 +947,13 @@ class Mike:
             su_token(risposta)
             return risposta
 
+        # INTENTI DIRETTI: richieste concrete sul PC → esegui lo strumento vero,
+        # senza lasciar "decidere" al modello (che tende a chiacchierare).
+        diretto = self._intento_diretto(testo)
+        if diretto is not None:
+            su_token(diretto)
+            return diretto
+
         # 2) Rilevamento linguaggio naturale per Travelpayouts
         naturale = self._rileva_e_gestisci_naturale(testo, su_token)
         if naturale is not None:
@@ -1329,6 +1336,53 @@ class Mike:
         oggetti = ("bot", "programma", "software", "script", "applicazione", "app ",
                    "gioco", "sito ", "tool", "automazione")
         return any(v in t for v in verbi) and any(o in t for o in oggetti)
+
+    def _intento_diretto(self, testo):
+        """Mappa le richieste concrete da tecnico direttamente sullo strumento reale.
+        Restituisce la risposta (eseguendo l'azione) oppure None se non è un intento noto."""
+        t = testo.lower()
+
+        def ha(*frasi):
+            return any(f in t for f in frasi)
+
+        # Azioni che MODIFICANO → passano dalla proposta/conferma (o esperto)
+        if ha("libera spazio", "libera la memoria", "libera memoria", "fai spazio",
+              "pulisci il disco", "pulisci disco", "svuota il disco", "pulizia disco",
+              "pulisci la memoria", "pulisci la cache", "libera il disco"):
+            return self._proponi(
+                "Eliminare le cache di sistema nascoste e recuperabili (temp, cestino, "
+                "cache aggiornamenti, miniature, component store)", azioni.libera_spazio_profondo)
+        if ha("pulisci i temp", "pulisci temp", "svuota il cestino", "svuota cestino"):
+            return self._proponi("Eliminare i file temporanei e svuotare il cestino",
+                                 azioni.manutenzione_sicura)
+
+        # Letture del PC → esegui SUBITO (sola lettura, nessun rischio)
+        if ha("verifica memoria", "controlla memoria", "verifica lo spazio", "controlla lo spazio",
+              "quanto spazio", "spazio libero", "spazio sul disco", "spazio su disco",
+              "disco pieno", "memoria piena", "memoria pc", "memoria del pc", "analizza spazio",
+              "analizza il disco", "verifica disco", "controlla disco", "verifica il pc",
+              "controlla il pc", "stato del disco", "quanta memoria"):
+            self._log("Analizzo la memoria/disco del PC…")
+            ok, msg = azioni.analizza_spazio_profondo()
+            return msg + "\n\n💡 Per liberarla scrivi: «libera spazio»."
+        if ha("cosa gira", "cosa sta girando", "cosa sta facendo il pc", "processi attivi",
+              "cosa rallenta", "che programmi girano", "programmi attivi", "cosa consuma"):
+            return self.vedi_processi()
+        if ha("stato del pc", "stato pc", "come va il pc", "salute del pc", "monitor"):
+            testo_s, allarmi = watch.controlla()
+            r = f"🔎 STATO PC: {testo_s}"
+            r += ("\n\n🔔 " + "\n".join(allarmi)) if allarmi else "\n✅ Tutto nella norma."
+            return r
+        if ha("fai una diagnosi", "diagnosi del pc", "diagnostica il pc", "analizza il pc",
+              "controlla tutto il pc", "scansiona il pc"):
+            return self.diagnosi_pc()
+        if ha("leggi lo schermo", "guarda lo schermo", "cosa c'è sullo schermo",
+              "leggi schermo", "guarda la schermata", "cosa vedi sullo schermo"):
+            return self.leggi_schermo()
+        if ha("crash", "schermata blu", "bsod", "errori recenti", "perché si è bloccato",
+              "perche si e bloccato"):
+            return self.analizza_crash()
+        return None
 
     def _e_richiesta_modifica(self, testo):
         """True se l'utente chiede di modificare il progetto attivo."""

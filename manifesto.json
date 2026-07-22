@@ -1,6 +1,6 @@
 {
-  "versione": "0.19.0",
-  "note": "Ondata 2: storico clienti, monitor/watcher PC, voce sempre attiva, Monitoraggio.bat portatile",
+  "versione": "0.19.1",
+  "note": "FIX importante: le richieste concrete sul PC (verifica memoria, libera spazio, cosa gira...) ora ESEGUONO lo strumento vero invece di far chiacchierare il modello",
   "file": [
     "README.md",
     "avvia.py",
@@ -69,7 +69,7 @@
     "mike/agents/ragionatore.py": "4961743a7fd44276078d4baea17745f67a796a8d163783110f824b3e3d41a4b2",
     "mike/aggiornamento/__init__.py": "87b6bcd652c67eefe6553e32fe707b311568b18d41bba9d61df01e6b0c1e6419",
     "mike/aggiornamento/updater.py": "8fa3b6125a11ce780ef67ede6e2f6d6768f02eaef0adf000f8ecf98e2566db3d",
-    "mike/brain.py": "8fd84ada32304969ff0bb5d5f618b9791c52ce948857df35f4343b0eecf85d93",
+    "mike/brain.py": "a20a54a713f2aa12653c0c3fb33f8c1632c4d6a57fb01589f581fe522f1550f7",
     "mike/clienti/__init__.py": "012e55c020337646b801cc8406cc512c68d30d98bd0cef9acb69da180ba30f54",
     "mike/clienti/registro.py": "1c1f5f7d89074b9be8e58e187277dc3c7376edbb0e9465e6fcb2b420ab18a727",
     "mike/config.py": "29c129ed421701457bf662663006a64d5a804aca264f1b801195aeb6536c4e1c",

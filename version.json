@@ -1,4 +1,4 @@
 {
-  "versione": "0.19.0",
-  "note": "Ondata 2: storico clienti, monitor/watcher PC, voce sempre attiva, Monitoraggio.bat portatile"
+  "versione": "0.19.1",
+  "note": "FIX importante: le richieste concrete sul PC (verifica memoria, libera spazio, cosa gira...) ora ESEGUONO lo strumento vero invece di far chiacchierare il modello"
 }
