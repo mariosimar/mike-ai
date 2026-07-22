@@ -26,9 +26,9 @@ from .. import config as cfg_mod
 CARTELLA = os.path.dirname(os.path.abspath(__file__))
 APP_HTML = os.path.join(CARTELLA, "app.html")
 
-# Un'unica istanza del cervello, condivisa. Un lucchetto serializza le chat.
+# Un'unica istanza del cervello, condivisa. Le richieste NON vengono messe in fila:
+# così un comando istantaneo risponde subito anche se un'altra risposta è in corso.
 mike = Mike()
-_lock = threading.Lock()
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -123,11 +123,10 @@ class Handler(BaseHTTPRequestHandler):
             except Exception:
                 pass
 
-        with _lock:
-            try:
-                mike.chiedi_stream(testo, su_token)
-            except Exception as e:
-                su_token(f"\n[Errore: {e}]")
+        try:
+            mike.chiedi_stream(testo, su_token)
+        except Exception as e:
+            su_token(f"\n[Errore: {e}]")
 
     def _camera(self, corpo):
         data_url = corpo.get("immagine", "")

@@ -1,6 +1,6 @@
 {
-  "versione": "0.19.4",
-  "note": "Velocita: modalita agente OFF di default (1 chiamata invece di 3-4), i comandi PC restano diretti e istantanei",
+  "versione": "0.19.5",
+  "note": "FIX blocco: tolta la messa in fila delle richieste (un comando lento non blocca piu gli altri)",
   "file": [
     "README.md",
     "avvia.py",
@@ -113,6 +113,6 @@
     "mike/voce/voce.py": "f4c87ee1d5f6d459ac552a021bdacd36e5d8bf30830ebd880b58337799d885fe",
     "mike/voce/voce_stt.ps1": "c2eb41d38449258b7b30167d067528e41de7933694187932e8955e0df79159fe",
     "mike/web/__init__.py": "bb34ab0c11e4a194477543b5790d009de3952306864b0155586b1f30baa07e56",
-    "mike/web/server.py": "61a14b11ff3ba330bf2c6a1af8514791b7ac7775ed0b792b2b9c30091ac55b55"
+    "mike/web/server.py": "e5ecec6d4e4c25ffad6d28cfe7731f5e03bf0c2af96b620723e282e2b7814f72"
   }
 }

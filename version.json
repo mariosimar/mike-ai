@@ -1,4 +1,4 @@
 {
-  "versione": "0.19.4",
-  "note": "Velocita: modalita agente OFF di default (1 chiamata invece di 3-4), i comandi PC restano diretti e istantanei"
+  "versione": "0.19.5",
+  "note": "FIX blocco: tolta la messa in fila delle richieste (un comando lento non blocca piu gli altri)"
 }
