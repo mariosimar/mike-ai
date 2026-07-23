@@ -984,7 +984,9 @@ class Mike:
             return msg
 
         # Modalità agentica (stile Claude): il modello sceglie ed usa gli strumenti da solo.
-        if self.cfg.get("modalita_agente", True) and agent_llm.provider_predefinito(self.cfg):
+        # Modalità agentica avanzata SOLO con Claude (cloud veloce): sul locale (CPU)
+        # sarebbe troppo lenta, quindi lì si resta in modalità diretta/veloce.
+        if self.cfg.get("modalita_agente", False) and agent_llm.provider_predefinito(self.cfg) == "claude":
             try:
                 return self._ragiona(testo, su_token)
             except Exception as e:

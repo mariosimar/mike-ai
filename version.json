@@ -1,4 +1,4 @@
 {
-  "versione": "0.19.8",
-  "note": "Fix formatta.ps1: il trattino lungo in una stringa rompeva PowerShell (Diagnosi PC.bat non generava il report). Ora ASCII."
+  "versione": "0.20.0",
+  "note": "Cervello Claude: con la chiave API Mike ragiona come Claude (modalita agentica attiva solo con Claude, veloce); sul locale resta veloce e diretto"
 }

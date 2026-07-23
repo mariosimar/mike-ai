@@ -22,7 +22,7 @@ PREDEFINITI = {
     "abilita_memoria": True,
     "aggiornamento_sorgente": "",
     "aggiornamento_auto": True,
-    "modalita_agente": False,   # False = veloce (1 chiamata); i comandi PC restano diretti
+    "modalita_agente": True,    # si attiva SOLO con Claude (veloce); sul locale resta diretta
     "modalita_esperto": False,
 }
 
