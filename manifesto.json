@@ -1,6 +1,6 @@
 {
-  "versione": "0.21.2",
-  "note": "Modalita CERCA SEMPRE: Mike cerca sul web per qualsiasi domanda (comando /cerca-sempre on|off). I saluti restano istantanei.",
+  "versione": "0.21.3",
+  "note": "Nuovo: 'dove mi trovo' rileva la posizione reale (citta/regione) dall'indirizzo IP, subito, invece di cercare siti generici",
   "file": [
     "README.md",
     "avvia.py",
@@ -69,7 +69,7 @@
     "mike/agents/ragionatore.py": "636cb6851807a5450144c2f4cb0b3815ccf670aac37617667280d214e524d8dc",
     "mike/aggiornamento/__init__.py": "87b6bcd652c67eefe6553e32fe707b311568b18d41bba9d61df01e6b0c1e6419",
     "mike/aggiornamento/updater.py": "8fa3b6125a11ce780ef67ede6e2f6d6768f02eaef0adf000f8ecf98e2566db3d",
-    "mike/brain.py": "579219bd986d923d0427e2e33c6bc2909dc31396ee6e7c5240358095f7bbb7e3",
+    "mike/brain.py": "810e9f704326b889aa85a109dc4129855d554cce988e01df1402e22132131b2d",
     "mike/clienti/__init__.py": "012e55c020337646b801cc8406cc512c68d30d98bd0cef9acb69da180ba30f54",
     "mike/clienti/registro.py": "1c1f5f7d89074b9be8e58e187277dc3c7376edbb0e9465e6fcb2b420ab18a727",
     "mike/config.py": "5022609c39274716a942acf28434187bc91b09907c141ce08f5856c0f019420f",
@@ -106,7 +106,7 @@
     "mike/riparazione/azioni.py": "ed8a031d3b7ea85d9626d57df59b4057ebc7677320a5f225a928377ba592a945",
     "mike/riparazione/spazio.ps1": "d60e52d030bf97b4bacf9f96eeadd742be3158ec79463066090126c213156ab2",
     "mike/tools/__init__.py": "8e1c600e9266ba8fc657753ef1541d55065e46f1a901cbccc8c50713f4ec8302",
-    "mike/tools/mappe.py": "e40e6cbb97d6b260fb6c47cbe1b782ddf71191ef5f2fdf9320dcd408387a99db",
+    "mike/tools/mappe.py": "081d0cb383c0fd5f982c7ceb31b67fa961a4be4af59b28e0dfb759d11db3f92d",
     "mike/tools/schermo.py": "47a1bf7932392531df65b58e85242e3fd1410454bf91d24a6d37945337f29181",
     "mike/tools/web.py": "10a5b6aa97fc93cedb2734bbc36a28df3763d5b7fd641a715892c862b3b53dcc",
     "mike/voce/__init__.py": "849864a0b1d18db131ab1f840c45c97316ad060d7c1734f3fad7f26f8a3508ed",

@@ -1523,6 +1523,12 @@ class Mike:
         if a("come va il pc", "come sta il pc", "salute del pc", "stato del pc",
               "stato pc", "va bene il pc", "monitora"):
             return "stato"
+
+        # POSIZIONE (dove mi trovo) — via IP
+        if a("dove mi trovo", "dove sono", "la mia posizione", "dove sto",
+              "posizione attuale", "in che città sono", "in che citta sono",
+              "qual è la mia posizione", "dove siamo", "che città è questa"):
+            return "posizione"
         return None
 
     def _intento_diretto(self, testo):
@@ -1536,6 +1542,15 @@ class Mike:
                 "cache aggiornamenti, miniature, component store)", azioni.libera_spazio_profondo)
         if intento == "cestino":
             return self._proponi("Svuotare il cestino", azioni.svuota_cestino)
+        if intento == "posizione":
+            self._log("Rilevo la posizione dall'indirizzo IP…")
+            p = mappe.posizione_ip()
+            if not p:
+                return "Non riesco a rilevare la posizione ora (controlla la connessione internet)."
+            return (f"📍 Ti trovi (circa) a: {p['citta']}, {p['regione']}, {p['paese']}\n"
+                    f"Coordinate: {p['lat']}, {p['lon']}\n"
+                    f"Connessione: {p['provider']}\n"
+                    "(È la zona della tua connessione internet, non un GPS preciso.)")
         if intento == "diagnosi":
             return self.diagnosi_pc()
         if intento == "crash":
