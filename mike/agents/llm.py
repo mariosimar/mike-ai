@@ -30,16 +30,19 @@ def provider_predefinito(cfg):
     return None
 
 
-def chiedi(cfg, provider, system, prompt, max_token=1500):
+def chiedi(cfg, provider, system, prompt, max_token=1500, modello_override=None):
     """Una domanda singola al provider indicato. Restituisce il testo."""
     messaggi = [{"ruolo": "utente", "testo": prompt}]
     if provider == "ollama":
-        return ollama.chiedi(cfg["modello_ollama"], messaggi, system=system, max_token=max_token)
+        modello = modello_override or cfg.get("modello_ollama", "qwen2.5:3b")
+        return ollama.chiedi(modello, messaggi, system=system, max_token=max_token)
     elif provider == "claude":
-        return claude.chiedi(cfg["claude_api_key"], cfg["modello_claude"],
+        modello = modello_override or cfg.get("modello_claude", "claude-sonnet-4-6")
+        return claude.chiedi(cfg["claude_api_key"], modello,
                              messaggi, system=system, max_token=max_token)
     elif provider == "gemini":
-        return gemini.chiedi(cfg["gemini_api_key"], cfg["modello_gemini"],
+        modello = modello_override or cfg.get("modello_gemini", "gemini-2.0-flash")
+        return gemini.chiedi(cfg["gemini_api_key"], modello,
                              messaggi, system=system, max_token=max_token)
     raise ValueError(f"Provider sconosciuto: {provider}")
 

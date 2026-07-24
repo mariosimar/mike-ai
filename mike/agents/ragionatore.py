@@ -18,6 +18,32 @@ class Ragionatore:
         self.strumenti = strumenti          # {nome: {"desc","param":bool,"fn"}}
         self.log = log or (lambda s: None)
         self.provider = agent_llm.provider_predefinito(cfg)
+        self.modello_override = self._scegli_modello()
+
+    def _scegli_modello(self):
+        """Seleziona il modello migliore per il ragionamento agentico.
+
+        Predilige il modello Ollama impostato in config.json per risposte veloci.
+        """
+        if self.provider == "ollama":
+            try:
+                installati = ollama.modelli()
+                mod_cfg = self.cfg.get("modello_ollama", "qwen2.5:3b")
+                if mod_cfg in installati:
+                    return mod_cfg
+                for m in installati:
+                    if any(k in m.lower() for k in ("qwen", "hermes", "phi", "gpt-oss")):
+                        return m
+                if installati:
+                    return installati[0]
+            except Exception:
+                pass
+            return self.cfg.get("modello_ollama", "qwen2.5:3b")
+        elif self.provider == "claude":
+            return self.cfg.get("modello_claude", "claude-sonnet-4-6")
+        elif self.provider == "gemini":
+            return self.cfg.get("modello_gemini", "gemini-2.0-flash")
+        return None
 
     def _descrizioni(self):
         righe = []
@@ -37,31 +63,35 @@ class Ragionatore:
 
     def _decidi(self, testo, storia, osservazioni):
         sistema = (
-            "Sei il modulo di RAGIONAMENTO di Mike. Il tuo compito è decidere se usare "
-            "uno STRUMENTO per rispondere all'utente.\n\n"
+            "Sei il modulo di RAGIONAMENTO AUTONOMO di Mike. Il tuo compito è decidere se usare "
+            "uno STRUMENTO per cercare su internet, leggere pagine web o analizzare il sistema "
+            "per rispondere all'utente.\n\n"
             "Strumenti disponibili:\n" + self._descrizioni() + "\n\n"
             "REGOLE:\n"
-            "• Se ti serve un dato che solo uno strumento può darti, rispondi SOLO con:\n"
-            '  {\"strumento\": \"nome\", \"argomento\": \"testo\"}\n'
-            "• Se è una domanda generica, di conversazione, o hai già i dati per rispondere, "
-            "rispondi SOLO con:\n  {\"strumento\": \"nessuno\"}\n"
-            "Rispondi SOLO con il JSON, niente altro."
+            "• Puoi cercare informazioni sul web (cerca_web o approfondisci) e poi leggere pagine web specifiche (leggi_pagina).\n"
+            "• Se ti serve uno strumento, rispondi ESCLUSIVAMENTE con un JSON nel formato:\n"
+            '  {"strumento": "nome_strumento", "argomento": "valore"}\n'
+            "• Se è una domanda generica, o hai già raccolto tutti i dati per rispondere, "
+            "rispondi ESCLUSIVAMENTE con:\n  {\"strumento\": \"nessuno\"}\n"
+            "Non aggiungere MAI altro testo prima o dopo il JSON."
         )
-        oss = "\n\n".join(f"[{n} {a}] → {r[:600]}" for n, a, r in osservazioni) or "(nessuna)"
+        oss = "\n\n".join(f"[{n} {a}] → {r[:1000]}" for n, a, r in osservazioni) or "(nessuna)"
         prompt = (
             f"Conversazione recente:\n{self._storia_breve(storia)}\n\n"
             f"Osservazioni già raccolte dagli strumenti:\n{oss}\n\n"
             f"Ultima richiesta dell'utente: {testo}"
         )
         try:
-            out = agent_llm.chiedi(self.cfg, self.provider, sistema, prompt, max_token=150)
+            out = agent_llm.chiedi(
+                self.cfg, self.provider, sistema, prompt, max_token=200, modello_override=self.modello_override
+            )
         except Exception:
             return None
         return agent_llm.estrai_json(out)
 
     # ---------- ciclo agentico ----------
 
-    def esegui(self, testo, storia, sistema_base, su_token, max_passi=3):
+    def esegui(self, testo, storia, sistema_base, su_token, max_passi=4):
         osservazioni = []
         gia_usati = set()
         for _ in range(max_passi):
@@ -84,7 +114,7 @@ class Ragionatore:
                 risultato = s["fn"](arg) if s.get("param") else s["fn"]()
             except Exception as e:
                 risultato = f"(errore nello strumento {nome}: {e})"
-            osservazioni.append((nome, arg, (risultato or "")[:2500]))
+            osservazioni.append((nome, arg, (risultato or "")[:4000]))
 
         return self._rispondi(testo, storia, sistema_base, osservazioni, su_token)
 
@@ -96,12 +126,15 @@ class Ragionatore:
             blocco = "\n\n".join(f"[Strumento {n} {a}]\n{r}" for n, a, r in osservazioni)
             sistema += (
                 "\n\nDATI REALI RACCOLTI DAGLI STRUMENTI. La tua risposta DEVE basarsi su questi "
-                "dati e riportarli all'utente (indirizzi, coordinate, valori, risultati). "
+                "dati e riportarli all'utente (citando sempre le fonti ed URL se presenti). "
                 "NON dire all'utente di cercare altrove o su Google: il dato è già qui sotto, "
-                "usalo direttamente.\n" + blocco)
+                "usalo direttamente.\n" + blocco
+            )
         if self.provider == "ollama":
-            return ollama.chiedi_stream(self.cfg["modello_ollama"], storia,
-                                        system=sistema, su_token=su_token)
-        risposta = agent_llm.chiedi(self.cfg, self.provider, sistema, testo, max_token=1200)
+            modello = self.modello_override or self.cfg.get("modello_ollama", "qwen2.5:3b")
+            return ollama.chiedi_stream(modello, storia, system=sistema, su_token=su_token)
+        risposta = agent_llm.chiedi(
+            self.cfg, self.provider, sistema, testo, max_token=1500, modello_override=self.modello_override
+        )
         su_token(risposta)
         return risposta

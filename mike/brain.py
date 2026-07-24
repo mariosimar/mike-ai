@@ -113,7 +113,7 @@ class Mike:
 
     # ---------- comandi speciali ----------
 
-    def _gestisci_comando(self, testo):
+    def _gestisci_comando(self, testo, su_token=None):
         """Comandi che iniziano con '/'. Restituisce una risposta o None."""
         t = testo.strip()
         if t.lower() in ("/aiuto", "/help"):
@@ -125,6 +125,8 @@ class Mike:
                 "/spazio                       → mostra dove recuperare spazio (file inutili)\n"
                 "/processi                     → mostra cosa sta facendo il PC adesso (live)\n"
                 "/check-tp                     → verifica le affiliazioni su Travelpayouts\n"
+                "\n🌐 RICERCA WEB ED ANALISI\n"
+                "/ricerca <domanda>            → ricerca approfondita sul web (legge i siti e cita le fonti)\n"
                 "\n🔐 ACCESSO / PASSWORD\n"
                 "/account                      → analizza gli account e come recuperare l'accesso\n"
                 "/reset-password <ut> <nuova>  → azzera la password di un account LOCALE (serve admin)\n"
@@ -166,7 +168,7 @@ class Mike:
                 "/revisione                    → crea un report del progetto e lo manda a Gemini per un controllo\n"
                 "/cervello [modello]           → mostra/cambia il modello AI in uso\n"
                 "\n💬 ALTRO\n"
-                "/ricorda <fatto>  /cerca <testo>  /stato  /aiuto")
+                "/ricorda <fatto>  /cerca <testo>  /ricerca <domanda>  /stato  /aiuto")
         # --- conferma / annulla azioni di riparazione ---
         if t.lower() in ("/conferma", "/conferma!", "/si", "/sì"):
             return self._esegui_azione_in_sospeso()
@@ -382,12 +384,59 @@ class Mike:
         if t.lower() in ("/profilo", "/chi-sono"):
             p = store.profilo_come_testo()
             return p if p else "Non so ancora molto di te. Dimmi: /chiamami <nome>  e  /io <qualcosa su di te>."
+        if t.lower().startswith("/ricerca ") or t.lower() in ("/ricerca", "/approfondisci"):
+            query = t.split(" ", 1)[1].strip() if " " in t else ""
+            if not query:
+                return ("🔍 USO DEL COMANDO /ricerca:\n"
+                        "/ricerca <domanda o argomento>\n\n"
+                        "Esempio: /ricerca ultime notizie su Windows 11\n"
+                        "Mike cercherà su internet, leggerà le pagine web dei siti e risponderà con informazioni aggiornate citando le fonti.")
+            return self.ricerca_autonoma(query, su_token=su_token)
         if t.lower().startswith("/cerca "):
             query = t[len("/cerca "):].strip()
             return web.cerca_come_testo(query)
         if t.lower() == "/stato":
             return self.stato()
         return None
+
+    def ricerca_autonoma(self, query, su_token=None):
+        """Esegue una ricerca approfondita sul web, scarica e legge il contenuto delle pagine,
+        e genera una sintesi citando le fonti reali (URL).
+        """
+        self._log(f"🔎 Cerco sul web: «{query}»…")
+        # Su un PC senza GPU, scaricare pagine intere è troppo lento. Usiamo i risultati
+        # di ricerca (titolo + riassunto + URL): veloci e citano già le fonti.
+        dati_web = web.cerca_come_testo(query, numero=5)
+        if dati_web and len(dati_web) > 2500:
+            dati_web = dati_web[:2500] + "\n…(estratto)"
+
+        sistema = (
+            "Sei Mike. Rispondi alla domanda dell'utente USANDO i dati estratti dal web qui "
+            "sotto. Sii chiaro e conciso. Cita le FONTI (URL) che hai usato. In italiano."
+        )
+        prompt = f"Domanda: {query}\n\nDati dal web:\n{dati_web}"
+
+        prov = agent_llm.provider_predefinito(self.cfg)
+        self._log("Scrivo la risposta…")
+        storia = [{"ruolo": "utente", "testo": prompt}]
+        if su_token and prov == "ollama":
+            # Usa il modello configurato (veloce). NIENTE gpt-oss:20b qui: su CPU si pianta.
+            mod = self.cfg.get("modello_ollama", "qwen2.5:3b")
+            risposta = ollama.chiedi_stream(mod, storia, system=sistema, su_token=su_token)
+        else:
+            risposta = agent_llm.chiedi(self.cfg, prov, sistema, prompt, max_token=900)
+            if su_token:
+                su_token(risposta)
+
+        self.cronologia.append({"ruolo": "utente", "testo": f"/ricerca {query}"})
+        self.cronologia.append({"ruolo": "assistente", "testo": risposta})
+        self.cronologia = self.cronologia[-MAX_CRONOLOGIA:]
+        if self.cfg.get("abilita_memoria", True):
+            try:
+                store.registra_conversazione(query, risposta, f"{prov}_ricerca")
+            except Exception:
+                pass
+        return risposta
 
     # ---------- domanda principale ----------
 
@@ -932,9 +981,10 @@ class Mike:
         Per i comandi e per i provider cloud, su_token riceve il testo completo in
         una volta. Per Ollama, riceve i token man mano. Restituisce il testo completo.
         """
-        speciale = self._gestisci_comando(testo)
+        speciale = self._gestisci_comando(testo, su_token=su_token)
         if speciale is not None:
-            su_token(speciale)
+            if speciale:
+                su_token(speciale)
             return speciale
 
         # Impara automaticamente qualcosa sull'utente (nome), così ti conosce.
@@ -983,10 +1033,8 @@ class Mike:
             su_token(msg)
             return msg
 
-        # Modalità agentica (stile Claude): il modello sceglie ed usa gli strumenti da solo.
-        # Modalità agentica avanzata SOLO con Claude (cloud veloce): sul locale (CPU)
-        # sarebbe troppo lenta, quindi lì si resta in modalità diretta/veloce.
-        if self.cfg.get("modalita_agente", False) and agent_llm.provider_predefinito(self.cfg) == "claude":
+        # Modalità agentica (stile Claude/ReAct): il modello sceglie ed usa gli strumenti da solo.
+        if self.cfg.get("modalita_agente", True):
             try:
                 return self._ragiona(testo, su_token)
             except Exception as e:
@@ -998,6 +1046,8 @@ class Mike:
         contesto_web = ""
         if self._serve_web(testo):
             self._log("Cerco informazioni aggiornate sul web…")
+            # Ricerca leggera (snippet) per le chat: veloce. La lettura completa
+            # delle pagine è nel comando /ricerca.
             contesto_web = web.cerca_come_testo(testo, numero=4)
         contesto_sistema = ""
         if self._serve_sistema(testo):
@@ -1063,8 +1113,12 @@ class Mike:
             return recupero.riassunto_account(rep) if rep else (err or "Account non leggibili.")
 
         return {
-            "cerca_web": {"desc": "Cerca informazioni aggiornate su INTERNET. argomento=cosa cercare",
+            "cerca_web": {"desc": "Cerca informazioni aggiornate su INTERNET (titoli e snippet). argomento=cosa cercare",
                           "param": True, "fn": lambda q: web.cerca_come_testo(q, numero=4)},
+            "leggi_pagina": {"desc": "Scarica e legge il contenuto completo di una pagina web da un URL. argomento=URL della pagina",
+                             "param": True, "fn": lambda u: web.leggi_pagina(u)},
+            "approfondisci": {"desc": "Ricerca approfondita sul web: trova e legge direttamente le pagine dei primi 3 risultati. argomento=query di ricerca",
+                              "param": True, "fn": lambda q: web.ricerca_approfondita(q, numero=3)},
             "mappa": {"desc": "Trova un indirizzo o luogo e le sue coordinate. argomento=indirizzo o luogo",
                       "param": True, "fn": _mappa},
             "stato_pc": {"desc": "Legge cosa sta facendo il PC ADESSO (processi attivi, RAM, CPU).",

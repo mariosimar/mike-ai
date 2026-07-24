@@ -1,4 +1,4 @@
 {
-  "versione": "0.20.0",
-  "note": "Cervello Claude: con la chiave API Mike ragiona come Claude (modalita agentica attiva solo con Claude, veloce); sul locale resta veloce e diretto"
+  "versione": "0.21.0",
+  "note": "Ricerca web sistemata: usava gpt-oss:20b (si bloccava su CPU senza GPU). Ora modello veloce + risultati leggeri = /ricerca funziona in ~30s con le fonti"
 }
