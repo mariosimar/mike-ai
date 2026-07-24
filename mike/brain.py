@@ -187,6 +187,17 @@ class Mike:
                 return "Modalità esperto disattivata: tornerò a chiederti /conferma prima di agire."
             return (f"Modalità esperto: {'ATTIVA' if self.cfg.get('modalita_esperto') else 'disattivata'}. "
                     "Usa /esperto on  oppure  /esperto off.")
+        if t.lower().startswith("/cerca-sempre") or t.lower().startswith("/cerca sempre"):
+            arg = t.split("sempre", 1)[1].strip().lower() if "sempre" in t.lower() else ""
+            if arg in ("on", "si", "sì", "attiva", "1"):
+                self.cfg["cerca_sempre"] = True
+                return ("🌐 CERCA SEMPRE ATTIVA: cercherò sul web per ogni domanda. "
+                        "(Ci vogliono ~30s a domanda.) Per spegnerla: /cerca-sempre off.")
+            if arg in ("off", "no", "disattiva", "0"):
+                self.cfg["cerca_sempre"] = False
+                return "Cerca-sempre disattivata: cerco sul web solo quando serve (meteo, notizie…)."
+            return (f"Cerca sempre: {'ATTIVA' if self.cfg.get('cerca_sempre') else 'disattivata'}. "
+                    "Usa /cerca-sempre on  oppure  /cerca-sempre off.")
         # --- diagnosi / log ---
         if t.lower() in ("/diagnosi", "/diagnostica"):
             return self.diagnosi_pc()
@@ -486,6 +497,13 @@ class Mike:
         if any(g in t for g in giorni) and any(w in t for w in ("tempo", "meteo", "pioggia", "sole")):
             return True
         return False
+
+    def _e_saluto(self, testo):
+        """True se è solo un saluto/ringraziamento (non vale la pena cercare sul web)."""
+        t = testo.lower().strip(" .!?")
+        saluti = ("ciao", "salve", "buongiorno", "buonasera", "buonanotte", "ehi", "hey",
+                  "grazie", "ok", "perfetto", "va bene", "come stai", "chi sei", "aiuto")
+        return t in saluti or len(t) <= 2
 
     def chiedi(self, testo):
         """Punto d'ingresso: l'utente fa una domanda, Mike risponde (stringa)."""
@@ -1048,6 +1066,11 @@ class Mike:
         if diretto is not None:
             su_token(diretto)
             return diretto
+
+        # Modalità "CERCA SEMPRE": Mike cerca sul web per QUALSIASI domanda (tranne i saluti).
+        if (self.cfg.get("cerca_sempre", False) and self.cfg.get("abilita_ricerca_web", True)
+                and not self._e_saluto(testo)):
+            return self.ricerca_autonoma(testo, su_token=su_token)
 
         # Domande che richiedono INFO ATTUALI dal web (meteo, notizie, prezzi, risultati…)
         # → cerca davvero sul web invece di far rispondere il modello a vuoto.

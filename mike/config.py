@@ -24,6 +24,7 @@ PREDEFINITI = {
     "aggiornamento_auto": True,
     "modalita_agente": True,    # si attiva SOLO con Claude (veloce); sul locale resta diretta
     "modalita_esperto": False,
+    "cerca_sempre": False,      # True = cerca sul web per OGNI domanda (piu' lento, ~30s)
 }
 
 

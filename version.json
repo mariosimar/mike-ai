@@ -1,4 +1,4 @@
 {
-  "versione": "0.21.1",
-  "note": "Meteo/notizie/prezzi: le domande su info attuali ora fanno cercare Mike sul web invece di rispondere 'non posso'"
+  "versione": "0.21.2",
+  "note": "Modalita CERCA SEMPRE: Mike cerca sul web per qualsiasi domanda (comando /cerca-sempre on|off). I saluti restano istantanei."
 }

@@ -1,6 +1,6 @@
 {
-  "versione": "0.21.1",
-  "note": "Meteo/notizie/prezzi: le domande su info attuali ora fanno cercare Mike sul web invece di rispondere 'non posso'",
+  "versione": "0.21.2",
+  "note": "Modalita CERCA SEMPRE: Mike cerca sul web per qualsiasi domanda (comando /cerca-sempre on|off). I saluti restano istantanei.",
   "file": [
     "README.md",
     "avvia.py",
@@ -69,10 +69,10 @@
     "mike/agents/ragionatore.py": "636cb6851807a5450144c2f4cb0b3815ccf670aac37617667280d214e524d8dc",
     "mike/aggiornamento/__init__.py": "87b6bcd652c67eefe6553e32fe707b311568b18d41bba9d61df01e6b0c1e6419",
     "mike/aggiornamento/updater.py": "8fa3b6125a11ce780ef67ede6e2f6d6768f02eaef0adf000f8ecf98e2566db3d",
-    "mike/brain.py": "efe90ba2c5491455a33e99840e84f0f73567533dfd2edd6cabaf583c9f7c28fe",
+    "mike/brain.py": "579219bd986d923d0427e2e33c6bc2909dc31396ee6e7c5240358095f7bbb7e3",
     "mike/clienti/__init__.py": "012e55c020337646b801cc8406cc512c68d30d98bd0cef9acb69da180ba30f54",
     "mike/clienti/registro.py": "1c1f5f7d89074b9be8e58e187277dc3c7376edbb0e9465e6fcb2b420ab18a727",
-    "mike/config.py": "cd334ff17b07758681456bdc29a81585fb1b1be70b223d832ef8a5b9f6c67f28",
+    "mike/config.py": "5022609c39274716a942acf28434187bc91b09907c141ce08f5856c0f019420f",
     "mike/conoscenza/__init__.py": "6215a0291c2c836c3c1ad5e6968c3b1309620a7969b2f6f6662b1f69b2353a50",
     "mike/conoscenza/base.py": "22d1c99c7a8abcc0c0893e6f0140f5a1fa184f6f7dee6891fbcc43be5fff94b2",
     "mike/costruttore/__init__.py": "6d4ed4a9a479d7d33264941af5da33e89c0a1966c069d8ba7c1f2686c2b49b5c",
