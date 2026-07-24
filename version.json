@@ -1,4 +1,4 @@
 {
-  "versione": "0.21.4",
-  "note": "Nuovo: 'apri google' (e altri siti) apre il sito nel browser invece di cercarlo. Riconosce i typo e i domini."
+  "versione": "0.21.5",
+  "note": "Apri QUALSIASI sito: per i siti non noti Mike cerca e apre il sito ufficiale corretto (es. poste italiane -> poste.it, comune di Parma -> comune.parma.it)"
 }
