@@ -169,7 +169,18 @@ class Mike:
                 "/cervello [modello]           → mostra/cambia il modello AI in uso\n"
                 "\n💬 ALTRO\n"
                 "/ricorda <fatto>  /cerca <testo>  /ricerca <domanda>  /stato  /aiuto")
-        # --- conferma / annulla azioni di riparazione ---
+        # --- conferma / annulla azioni (anche SENZA la barra, è più naturale) ---
+        tl = t.lower().strip(" .!,")
+        conferme = ("/conferma", "/conferma!", "/si", "/sì", "conferma", "confermo",
+                    "si", "sì", "ok", "vai", "procedi", "fallo", "certo", "yes", "va bene")
+        annulli = ("/annulla", "/no", "annulla", "no", "lascia", "lascia stare",
+                   "ferma", "stop", "ferma tutto")
+        if self.azione_in_sospeso and tl in conferme:
+            return self._esegui_azione_in_sospeso()
+        if self.azione_in_sospeso and tl in annulli:
+            self.azione_in_sospeso = None
+            return "Azione annullata. Non ho toccato niente."
+        # Se non c'è nulla in sospeso, i comandi espliciti con la barra restano validi
         if t.lower() in ("/conferma", "/conferma!", "/si", "/sì"):
             return self._esegui_azione_in_sospeso()
         if t.lower() in ("/annulla", "/no"):

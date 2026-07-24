@@ -1,4 +1,4 @@
 {
-  "versione": "0.21.5",
-  "note": "Apri QUALSIASI sito: per i siti non noti Mike cerca e apre il sito ufficiale corretto (es. poste italiane -> poste.it, comune di Parma -> comune.parma.it)"
+  "versione": "0.21.6",
+  "note": "Conferma naturale: 'conferma'/'si'/'ok'/'no' funzionano anche senza la barra / quando c'e un'azione in sospeso"
 }
