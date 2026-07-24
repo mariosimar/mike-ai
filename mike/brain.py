@@ -498,6 +498,48 @@ class Mike:
             return True
         return False
 
+    def _rileva_apri(self, testo):
+        """Se l'utente chiede di APRIRE un sito, restituisce l'URL. Altrimenti None."""
+        import re
+        t = testo.lower()
+        m = re.search(r"(?:apri(?:mi)?|apre|vai su|portami su|vai sul sito|mostrami il sito)\s+"
+                      r"(?:il sito |la pagina |su |sul )?([a-zà-ÿ0-9.\-/ ]{2,60})", t)
+        if not m:
+            return None
+        target = m.group(1).strip(" ?.!,")
+        if not target:
+            return None
+        comuni = [
+            ("goog", "https://www.google.com"), ("you", "https://www.youtube.com"),
+            ("face", "https://www.facebook.com"), ("insta", "https://www.instagram.com"),
+            ("whats", "https://web.whatsapp.com"), ("gmail", "https://mail.google.com"),
+            ("posta", "https://mail.google.com"), ("mapp", "https://www.google.com/maps"),
+            ("maps", "https://www.google.com/maps"), ("meteo", "https://www.ilmeteo.it"),
+            ("amazon", "https://www.amazon.it"), ("wiki", "https://it.wikipedia.org"),
+            ("ebay", "https://www.ebay.it"), ("subito", "https://www.subito.it"),
+            ("netflix", "https://www.netflix.com"), ("chatgpt", "https://chat.openai.com"),
+        ]
+        for pref, url in comuni:
+            if target.startswith(pref) or pref in target:
+                return url
+        # è già un dominio (es. "repubblica.it")?
+        if re.match(r"^[a-z0-9][a-z0-9.\-]*\.[a-z]{2,}(/.*)?$", target):
+            return "https://" + target
+        # altrimenti prova www.<nome>.com
+        slug = re.sub(r"[^a-z0-9]", "", target.split()[0]) if target.split() else ""
+        return f"https://www.{slug}.com" if len(slug) >= 2 else None
+
+    def apri_sito(self, url):
+        """Apre un sito nel browser predefinito del PC."""
+        import webbrowser
+        try:
+            webbrowser.open(url)
+            return (f"🌐 Ho aperto {url} nel tuo browser.\n"
+                    "(I siti come Google non si possono mostrare dentro Mike perché lo vietano; "
+                    "li apro in una scheda. Mappe e indirizzi invece li vedi nel pannello a destra.)")
+        except Exception as e:
+            return f"Non sono riuscito ad aprire {url}: {e}"
+
     def _e_saluto(self, testo):
         """True se è solo un saluto/ringraziamento (non vale la pena cercare sul web)."""
         t = testo.lower().strip(" .!?")
@@ -1066,6 +1108,13 @@ class Mike:
         if diretto is not None:
             su_token(diretto)
             return diretto
+
+        # "APRI <sito>" → apre il sito nel browser (non lo cerca).
+        url_apri = self._rileva_apri(testo)
+        if url_apri:
+            risposta = self.apri_sito(url_apri)
+            su_token(risposta)
+            return risposta
 
         # Modalità "CERCA SEMPRE": Mike cerca sul web per QUALSIASI domanda (tranne i saluti).
         if (self.cfg.get("cerca_sempre", False) and self.cfg.get("abilita_ricerca_web", True)

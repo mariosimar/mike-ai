@@ -1,4 +1,4 @@
 {
-  "versione": "0.21.3",
-  "note": "Nuovo: 'dove mi trovo' rileva la posizione reale (citta/regione) dall'indirizzo IP, subito, invece di cercare siti generici"
+  "versione": "0.21.4",
+  "note": "Nuovo: 'apri google' (e altri siti) apre il sito nel browser invece di cercarlo. Riconosce i typo e i domini."
 }

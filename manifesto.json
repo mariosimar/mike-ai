@@ -1,6 +1,6 @@
 {
-  "versione": "0.21.3",
-  "note": "Nuovo: 'dove mi trovo' rileva la posizione reale (citta/regione) dall'indirizzo IP, subito, invece di cercare siti generici",
+  "versione": "0.21.4",
+  "note": "Nuovo: 'apri google' (e altri siti) apre il sito nel browser invece di cercarlo. Riconosce i typo e i domini.",
   "file": [
     "README.md",
     "avvia.py",
@@ -69,7 +69,7 @@
     "mike/agents/ragionatore.py": "636cb6851807a5450144c2f4cb0b3815ccf670aac37617667280d214e524d8dc",
     "mike/aggiornamento/__init__.py": "87b6bcd652c67eefe6553e32fe707b311568b18d41bba9d61df01e6b0c1e6419",
     "mike/aggiornamento/updater.py": "8fa3b6125a11ce780ef67ede6e2f6d6768f02eaef0adf000f8ecf98e2566db3d",
-    "mike/brain.py": "810e9f704326b889aa85a109dc4129855d554cce988e01df1402e22132131b2d",
+    "mike/brain.py": "e2efd0cd5e4ba593a5f8bfd2f76232af0164a0aa28f8465169075c47a9107c78",
     "mike/clienti/__init__.py": "012e55c020337646b801cc8406cc512c68d30d98bd0cef9acb69da180ba30f54",
     "mike/clienti/registro.py": "1c1f5f7d89074b9be8e58e187277dc3c7376edbb0e9465e6fcb2b420ab18a727",
     "mike/config.py": "5022609c39274716a942acf28434187bc91b09907c141ce08f5856c0f019420f",
