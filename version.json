@@ -1,4 +1,4 @@
 {
-  "versione": "0.21.0",
-  "note": "Ricerca web sistemata: usava gpt-oss:20b (si bloccava su CPU senza GPU). Ora modello veloce + risultati leggeri = /ricerca funziona in ~30s con le fonti"
+  "versione": "0.21.1",
+  "note": "Meteo/notizie/prezzi: le domande su info attuali ora fanno cercare Mike sul web invece di rispondere 'non posso'"
 }

@@ -460,6 +460,33 @@ class Mike:
         t = testo.lower()
         return any(s in t for s in spie)
 
+    def _serve_ricerca(self, testo):
+        """La domanda richiede informazioni ATTUALI dal web? (meteo, notizie, prezzi…)
+        In tal caso Mike deve CERCARE davvero, non rispondere a memoria."""
+        t = " " + testo.lower() + " "
+        chiavi = [
+            # meteo
+            "meteo", "che tempo", "tempo fa", "tempo fara", "tempo farà", "previsioni",
+            "pioggia", "pioverà", "piovera", "piove", "neve", "nevica", "temperatura",
+            "gradi", "che tempo fa", "farà bello", "fara bello", "sole domani",
+            # notizie / attualità
+            "notizie", "ultime notizie", "cosa è successo", "cosa e successo",
+            "chi ha vinto", "risultato", "risultati", "partita", "classifica",
+            # prezzi / mercati
+            "prezzo", "quanto costa", "quotazione", "cambio euro", "bitcoin", "borsa",
+            "benzina", "carburante",
+            # orari / info aggiornate
+            "orari", "a che ora", "quando esce", "quando gioca", "in tempo reale",
+        ]
+        # giorni della settimana insieme a "tempo/meteo" (es. "domenica a Fiano")
+        giorni = ("lunedì", "lunedi", "martedì", "martedi", "mercoledì", "mercoledi",
+                  "giovedì", "giovedi", "venerdì", "venerdi", "sabato", "domenica")
+        if any(k in t for k in chiavi):
+            return True
+        if any(g in t for g in giorni) and any(w in t for w in ("tempo", "meteo", "pioggia", "sole")):
+            return True
+        return False
+
     def chiedi(self, testo):
         """Punto d'ingresso: l'utente fa una domanda, Mike risponde (stringa)."""
         # 1) Comandi speciali
@@ -1021,6 +1048,11 @@ class Mike:
         if diretto is not None:
             su_token(diretto)
             return diretto
+
+        # Domande che richiedono INFO ATTUALI dal web (meteo, notizie, prezzi, risultati…)
+        # → cerca davvero sul web invece di far rispondere il modello a vuoto.
+        if self.cfg.get("abilita_ricerca_web", True) and self._serve_ricerca(testo):
+            return self.ricerca_autonoma(testo, su_token=su_token)
 
         # 2) Rilevamento linguaggio naturale per Travelpayouts
         naturale = self._rileva_e_gestisci_naturale(testo, su_token)

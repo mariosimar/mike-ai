@@ -1,6 +1,6 @@
 {
-  "versione": "0.21.0",
-  "note": "Ricerca web sistemata: usava gpt-oss:20b (si bloccava su CPU senza GPU). Ora modello veloce + risultati leggeri = /ricerca funziona in ~30s con le fonti",
+  "versione": "0.21.1",
+  "note": "Meteo/notizie/prezzi: le domande su info attuali ora fanno cercare Mike sul web invece di rispondere 'non posso'",
   "file": [
     "README.md",
     "avvia.py",
@@ -69,7 +69,7 @@
     "mike/agents/ragionatore.py": "636cb6851807a5450144c2f4cb0b3815ccf670aac37617667280d214e524d8dc",
     "mike/aggiornamento/__init__.py": "87b6bcd652c67eefe6553e32fe707b311568b18d41bba9d61df01e6b0c1e6419",
     "mike/aggiornamento/updater.py": "8fa3b6125a11ce780ef67ede6e2f6d6768f02eaef0adf000f8ecf98e2566db3d",
-    "mike/brain.py": "c708af80e79d1e481bad91c13515c6ef3b4915628f43238e33a62c4959f42ba1",
+    "mike/brain.py": "efe90ba2c5491455a33e99840e84f0f73567533dfd2edd6cabaf583c9f7c28fe",
     "mike/clienti/__init__.py": "012e55c020337646b801cc8406cc512c68d30d98bd0cef9acb69da180ba30f54",
     "mike/clienti/registro.py": "1c1f5f7d89074b9be8e58e187277dc3c7376edbb0e9465e6fcb2b420ab18a727",
     "mike/config.py": "cd334ff17b07758681456bdc29a81585fb1b1be70b223d832ef8a5b9f6c67f28",
