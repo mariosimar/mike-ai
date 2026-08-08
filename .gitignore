@@ -11,5 +11,29 @@ __pycache__/
 *.log
 Report/
 
+# --- NON pubblicare: strumenti/binari esterni e file di lavoro ---
+BitCrack/
+CryptoDeepTools/
+btcmole/
+collider/
+collider_dir/
+keyhunt/
+bitcrackrandomiser/
+kangaroo140_work/
+tor/
+*.exe
+*.zip
+_*.py
+_*.txt
+*.bak
+crypto_*.py
+crypto_*.json
+broken_addresses.txt
+endangered_addresses.txt
+pub140.txt
+puzzle140_pub.txt
+nul
+mike/nul
+
 # Nota: config.example.json (senza chiavi) VIENE pubblicato, così gli altri
 # sanno quali voci mettere. Il tuo config.json reale resta solo sul tuo PC.
